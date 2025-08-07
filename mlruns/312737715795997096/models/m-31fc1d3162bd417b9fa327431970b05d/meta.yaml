@@ -1,0 +1,10 @@
+artifact_location: file:///home/vianney/projects/data-science-projects/breast-cancer-mlops/mlruns/312737715795997096/models/m-31fc1d3162bd417b9fa327431970b05d/artifacts
+creation_timestamp: 1754573922825
+experiment_id: '312737715795997096'
+last_updated_timestamp: 1754573926703
+model_id: m-31fc1d3162bd417b9fa327431970b05d
+model_type: null
+name: random_forest_model
+source_run_id: 0b3fb9478d2146ae8444cba8c3ae3484
+status: 2
+status_message: null

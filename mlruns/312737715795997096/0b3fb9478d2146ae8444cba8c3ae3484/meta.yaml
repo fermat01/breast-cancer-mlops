@@ -1,0 +1,14 @@
+artifact_uri: file:///home/vianney/projects/data-science-projects/breast-cancer-mlops/mlruns/312737715795997096/0b3fb9478d2146ae8444cba8c3ae3484/artifacts
+end_time: 1754573926783
+entry_point_name: ''
+experiment_id: '312737715795997096'
+lifecycle_stage: active
+run_id: 0b3fb9478d2146ae8444cba8c3ae3484
+run_name: funny-auk-196
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754573922429
+status: 3
+tags: []
+user_id: vianney

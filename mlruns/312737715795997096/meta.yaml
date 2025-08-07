@@ -1,0 +1,6 @@
+artifact_location: file:///home/vianney/projects/data-science-projects/breast-cancer-mlops/mlruns/312737715795997096
+creation_time: 1754573922269
+experiment_id: '312737715795997096'
+last_update_time: 1754573922269
+lifecycle_stage: active
+name: Breast_Cancer_Classification

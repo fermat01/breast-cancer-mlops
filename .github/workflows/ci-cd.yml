@@ -1,0 +1,49 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: coder2f/breast-cancer-mlapp:latest
+  EC2_HOST: ec2-instance-ip.amazonaws.com
+  EC2_USER: ec2-user
+  EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+jobs:
+  build_push_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: ${{ env.DOCKER_IMAGE }}
+
+    - name: Install ssh client
+      run: sudo apt-get update && sudo apt-get install -y openssh-client
+
+    - name: Deploy on EC2
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ env.EC2_HOST }}
+        username: ${{ env.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          docker pull $DOCKER_IMAGE
+          docker stop breast-cancer-mlapp || true
+          docker rm breast-cancer-mlapp || true
+          docker run -d -p 8000:80 -p 8001:8001 --name breast-cancer-mlapp $DOCKER_IMAGE

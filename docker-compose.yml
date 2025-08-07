@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  fastapi-app:
+    build: .
+    container_name: breast-cancer-mlops_fastapi
+    ports:
+      - "8000:80"
+      - "8001:8001"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: breast-cancer-mlops_prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    # Prometheus does not support basic auth natively.
+    # To secure it, we can put a reverse proxy like nginx in front with auth.
+    environment:
+      - PROMETHEUS_SCRAPE_INTERVAL=15s
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana
+    container_name: breast-cancer-mlops_grafana
+    ports:
+      - "3030:3000"
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: "coder2f"        # Grafana username
+      GF_SECURITY_ADMIN_PASSWORD: "coder004!" # Grafana password
+    restart: unless-stopped
+  mlflow:
+    image: mlflow/mlflow
+    container_name: breast-cancer-mlops_mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_TRACKING_URI: "http://localhost:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+    restart: unless-stopped
