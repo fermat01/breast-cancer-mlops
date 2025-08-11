@@ -7,7 +7,10 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/fermat01/breast-cancer-mlops?style=flat)
 ![ViewCount](https://views.whatilearened.today/views/github/fermat01/breast-cancer-mlops.svg?cache=remove)
 
+
+
 An end-to-end Machine Learning Operations (MLOps) project for Breast Cancer classification using the Wisconsin dataset. This repository includes model training with MLflow tracking, FastAPI-based REST API serving for predictions, Prometheus metrics integration, Docker containerization, and an automated CI/CD pipeline deploying on AWS ECS (Fargate).
+
 ---
 
 ## Table of Contents
