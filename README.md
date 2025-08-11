@@ -126,7 +126,7 @@ This MLOps project provides a complete workflow for building, serving, monitorin
   - Push image to Docker Hub (credentials in GitHub Secrets).  
   - SSH deploy container to AWS EC2 instance securely.  
 - Environment variables and secrets managed safely:  
-  - Non-sensitive config via `.env` or workflow `env:`  
+  - Non-sensitive config via `.env:`  
   - Sensitive tokens & keys via GitHub Secrets.
 
 ---
@@ -144,11 +144,11 @@ This MLOps project provides a complete workflow for building, serving, monitorin
 
 ## Development
 
-- Add utility/helper functions in `utils.py`.  
+- Helper functions in `utils.py`.  
 - Customize model logic in `model.py`.  
 - Extend API in `main.py`.  
-- Use MLflow UI for experiment tracking (`mlflow ui`).  
-- Use Docker Compose for managing multi-container setups if needed.
+- MLflow UI for experiment tracking (`mlflow ui`).  
+-  Docker Compose for managing multi-container setups if needed.
 
 ---
 
