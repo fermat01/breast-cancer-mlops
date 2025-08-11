@@ -7,8 +7,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/fermat01/breast-cancer-mlops?style=flat)
 ![ViewCount](https://views.whatilearened.today/views/github/fermat01/breast-cancer-mlops.svg?cache=remove)
 
-
-An end-to-end Machine Learning Operations (MLOps) project for Breast Cancer classification using the Wisconsin dataset. This repository includes model training with MLflow tracking, FastAPI-based REST API serving for predictions, Prometheus metrics integration, Docker containerization, and an automated CI/CD pipeline deploying on AWS EC2.
+This MLOps project provides a complete workflow for building, serving, monitoring, and deploying a machine learning model that classifies breast cancer using the Wisconsin dataset. The model is trained using scikit-learn's Random Forest implementation, tracked with MLflow, and served via FastAPI. Prometheus monitoring is integrated for observability, and the application is containerized with Docker and deployable via an automated GitHub Actions-based CI/CD pipeline targeting AWS ECS with Fargate.
 
 ---
 
