@@ -22,3 +22,5 @@ build/
 *.mypy_cache/
 *.ipynb_checkpoints/
 *.vscode/
+mlruns/
+bcmlops/
