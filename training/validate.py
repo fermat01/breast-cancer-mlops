@@ -142,8 +142,7 @@ if __name__ == "__main__":
     if result.warnings:
         print("\nWarnings:")
         for warning in result.warnings:
-<<<<<<< HEAD
+
             print(f"- {warning}")
-=======
+
             print(f"- {warning}")
->>>>>>> 6fe55a2a53800d1cdf76fc7b6c07ad98d6905335
