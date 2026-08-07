@@ -1,16 +1,35 @@
 """
 Data preprocessing module.
 
-Responsibilities:
-- Build preprocessing pipeline
-- Transform raw features into ML-ready features
+Responsibilities
+----------------
+- Create reusable preprocessing pipelines.
+- Validate preprocessing configuration.
 
-This module should NOT:
-- Load datasets
-- Split datasets
-- Train models
+This module intentionally DOES NOT:
+- Load datasets.
+- Split datasets.
+- Fit transformers.
+- Transform datasets.
+- Train machine learning models.
+
+The preprocessing pipeline returned here is designed to be
+embedded inside the final scikit-learn Pipeline together with
+the classifier.
+
+Example
+-------
+
+Pipeline(
+    [
+        ("preprocessing", create_preprocessing_pipeline()),
+        ("classifier", RandomForestClassifier())
+    ]
+)
+
+This guarantees that the exact same preprocessing is applied
+during training and inference.
 """
-
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -23,114 +42,91 @@ def create_preprocessing_pipeline() -> Pipeline:
     Returns
     -------
     Pipeline
-        Scikit-learn preprocessing pipeline.
+        A scikit-learn preprocessing pipeline.
 
     Notes
     -----
-    The Breast Cancer Wisconsin dataset contains
-    numerical features with different scales.
+    The Wisconsin Breast Cancer dataset contains only numerical
+    features with different scales.
 
-    Example:
+    Example
+    -------
+    mean area            ≈ 650
+    mean smoothness      ≈ 0.09
 
-    mean area:
-        ~600
-
-    mean smoothness:
-        ~0.1
-
-    Scaling prevents features with larger values
-    from dominating the model.
+    Although RandomForest does not strictly require scaling,
+    including preprocessing inside the ML Pipeline ensures a
+    consistent workflow and makes it easy to replace the model
+    later (e.g. LogisticRegression, SVM, Neural Networks).
     """
 
-    pipeline = Pipeline(
+    preprocessing_pipeline = Pipeline(
         steps=[
             (
                 "scaler",
-                StandardScaler()
+                StandardScaler(),
             )
         ]
     )
 
-    return pipeline
+    return preprocessing_pipeline
 
 
-def preprocess_features(
-    pipeline: Pipeline,
-    X_train,
-    X_test,
-):
+def pipeline_summary(pipeline: Pipeline) -> None:
     """
-    Fit preprocessing pipeline on training data
-    and transform train/test datasets.
+    Print information about the preprocessing pipeline.
 
     Parameters
     ----------
-    pipeline:
-        sklearn preprocessing pipeline.
+    pipeline : Pipeline
+        Preprocessing pipeline.
+    """
 
-    X_train:
-        Training features.
+    print("=" * 60)
+    print("Preprocessing Pipeline")
+    print("=" * 60)
 
-    X_test:
-        Testing features.
+    print(f"Pipeline type : {type(pipeline).__name__}")
+    print(f"Number of steps : {len(pipeline.steps)}")
+
+    print("\nSteps")
+
+    for index, (name, transformer) in enumerate(
+        pipeline.steps,
+        start=1,
+    ):
+        print(f"{index}. {name:<15} -> {transformer.__class__.__name__}")
+
+
+def validate_pipeline(pipeline: Pipeline) -> bool:
+    """
+    Validate preprocessing pipeline.
+
+    Parameters
+    ----------
+    pipeline : Pipeline
 
     Returns
     -------
-    tuple
-        Transformed training and testing data.
+    bool
+        True if valid.
     """
 
-    X_train_processed = pipeline.fit_transform(
-        X_train
-    )
+    if not isinstance(pipeline, Pipeline):
+        raise TypeError("Expected a scikit-learn Pipeline.")
 
-    X_test_processed = pipeline.transform(
-        X_test
-    )
+    if len(pipeline.steps) == 0:
+        raise ValueError("Pipeline contains no preprocessing steps.")
 
-    return (
-        X_train_processed,
-        X_test_processed,
-    )
+    return True
 
 
 if __name__ == "__main__":
 
-    from training.data_loader import load_dataset
-    from training.validate import validate_dataset
-    from training.split import split_dataset
+    pipeline = create_preprocessing_pipeline()
 
+    validate_pipeline(pipeline)
 
-    dataset = load_dataset()
+    pipeline_summary(pipeline)
 
-    validation = validate_dataset(dataset)
-
-    if not validation.is_valid:
-        raise ValueError(
-            validation.errors
-        )
-
-    X_train, X_test, y_train, y_test = split_dataset(
-        dataset
-    )
-
-    preprocessing = create_preprocessing_pipeline()
-
-    X_train_processed, X_test_processed = preprocess_features(
-        preprocessing,
-        X_train,
-        X_test,
-    )
-
-    print("=" * 60)
-    print("Preprocessing Test")
-    print("=" * 60)
-
-    print(
-        "Original shape:",
-        X_train.shape
-    )
-
-    print("Processed shape:",
-       X_train_processed.shape
-    )
+    print("\nPipeline successfully created.")

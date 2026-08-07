@@ -1,162 +1,258 @@
 """
-Training pipeline entry point.
+Main ML training pipeline.
 
-Current responsibility:
-- Orchestrate data loading
-- Validate dataset
-- Split dataset
-- Apply preprocessing
+Responsibilities
+----------------
 
-Future responsibility:
-- Train model
-- Evaluate model
-- Log experiments with MLflow
-- Save model artifact
+- Orchestrate complete workflow
+
+
+Workflow
+--------
+
+Load data
+    |
+Validate
+    |
+Split
+    |
+Preprocess
+    |
+Train
+    |
+Evaluate
+    |
+MLflow Tracking
+    |
+Model Registry
 """
+
+import logging
+from pathlib import Path
 
 
 from training.data_loader import load_dataset
+
 from training.validate import validate_dataset
+
 from training.split import split_dataset
+
+
 from training.preprocess import (
     create_preprocessing_pipeline,
-    preprocess_features,
 )
+
+
+from training.model import (
+    build_model,
+    train_model,
+)
+
+
+from training.evaluate import (
+    evaluate_model,
+)
+
+
+from training.mlflow_tracker import (
+    start_run,
+    log_parameters,
+    log_metrics,
+    log_directory,
+    log_model,
+)
+
+# ============================================================
+# Logging configuration
+# ============================================================
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+# ============================================================
+# Training pipeline
+# ============================================================
 
 
 def run_training_pipeline():
     """
-    Execute the complete data preparation pipeline.
-
-    Returns
-    -------
-    tuple
-        Processed training and testing data.
+    Execute complete ML training pipeline.
     """
 
-    print("=" * 60)
-    print("Starting Training Pipeline")
-    print("=" * 60)
+    logger.info("Starting training pipeline")
 
+    # =====================================================
+    # Start MLflow Run
+    # =====================================================
 
-    # --------------------------------
-    # Step 1: Load dataset
-    # --------------------------------
+    with start_run(run_name="RandomForest") as run:
 
-    print("\n[1/4] Loading dataset...")
+        # =================================================
+        # MLflow Run ID
+        # =================================================
 
-    dataset = load_dataset()
+        run_id = run.info.run_id
 
-    print(
-        f"Dataset loaded: {dataset.features.shape}"
-    )
+        logger.info(f"MLflow Run ID: {run_id}")
 
+        # =================================================
+        # 1. Load dataset
+        # =================================================
 
-    # --------------------------------
-    # Step 2: Validate dataset
-    # --------------------------------
+        logger.info("Loading dataset")
 
-    print("\n[2/4] Validating dataset...")
+        dataset = load_dataset()
 
-    validation_result = validate_dataset(
-        dataset
-    )
+        # =================================================
+        # 2. Validate dataset
+        # =================================================
 
+        logger.info("Validating dataset")
 
-    if not validation_result.is_valid:
+        validation = validate_dataset(dataset)
 
-        print("\nValidation failed:")
+        if not validation.is_valid:
 
-        for error in validation_result.errors:
-            print(
-                f"- {error}"
-            )
+            raise ValueError(validation.errors)
 
-        raise ValueError(
-            "Dataset validation failed"
+        logger.info("Dataset validation successful")
+
+        # =================================================
+        # 3. Split dataset
+        # =================================================
+
+        logger.info("Splitting dataset")
+
+        split = split_dataset(dataset)
+
+        logger.info(f"Train shape : {split.X_train.shape}")
+
+        logger.info(f"Test shape  : {split.X_test.shape}")
+
+        # =================================================
+        # 4. Preprocessing
+        # =================================================
+
+        logger.info("Creating preprocessing pipeline")
+
+        preprocessing = create_preprocessing_pipeline()
+
+        # =================================================
+        # 5. Build model
+        # =================================================
+
+        logger.info("Building model")
+
+        model = build_model(
+            preprocessing_pipeline=preprocessing,
+            n_estimators=100,
+            random_state=42,
         )
 
+        # =================================================
+        # 6. Train model
+        # =================================================
 
-    print("Dataset validation successful")
+        logger.info("Training model")
 
+        trained_model = train_model(
+            model,
+            split.X_train,
+            split.y_train,
+        )
 
-    if validation_result.warnings:
+        logger.info("Training completed")
 
-        print("\nWarnings:")
+        # =================================================
+        # 7. Evaluate model
+        # =================================================
 
-        for warning in validation_result.warnings:
-            print(
-                f"- {warning}"
-            )
+        logger.info("Evaluating model")
 
-
-    # --------------------------------
-    # Step 3: Split dataset
-    # --------------------------------
-
-    print("\n[3/4] Splitting dataset...")
-
-    split = split_dataset(
-        dataset
-    )
-
-    print(
-        f"Training samples: {len(split.X_train)}"
-    )
-
-    print(
-        f"Testing samples: {len(split.X_test)}"
-    )
-
-
-    # --------------------------------
-    # Step 4: Preprocessing
-    # --------------------------------
-
-    print("\n[4/4] Applying preprocessing...")
-
-
-    preprocessing_pipeline = (
-        create_preprocessing_pipeline()
-    )
-
-
-    X_train_processed, X_test_processed = (
-        preprocess_features(
-            preprocessing_pipeline,
+        metrics = evaluate_model(
+            trained_model,
             split.X_train,
             split.X_test,
+            split.y_train,
+            split.y_test,
         )
-    )
+
+        logger.info(f"Metrics: {metrics}")
+
+        # =================================================
+        # 8. MLflow Tracking
+        # =================================================
+
+        logger.info("Logging experiment to MLflow")
+
+        parameters = {
+            "model": "RandomForestClassifier",
+            "n_estimators": 100,
+            "random_state": 42,
+            "test_size": 0.20,
+            "features": split.X_train.shape[1],
+            "training_samples": len(split.X_train),
+            "testing_samples": len(split.X_test),
+        }
+
+        log_parameters(parameters)
+
+        log_metrics(metrics)
+
+        # =================================================
+        # 9. Log and Register model
+        # =================================================
+
+        logger.info("Logging trained model")
+
+        log_model(trained_model)
+
+        logger.info("Model registered successfully")
+
+        # =================================================
+        # 10. Log evaluation artifacts
+        # =================================================
+
+        reports_dir = Path("reports") / "evaluation"
+
+        if reports_dir.exists():
+
+            logger.info("Logging evaluation artifacts")
+
+            log_directory(reports_dir)
+
+        logger.info("MLflow logging completed")
+
+        return (
+            trained_model,
+            metrics,
+        )
 
 
-    print(
-        "Preprocessing completed"
-    )
-
-    print(
-        "Processed training shape:",
-        X_train_processed.shape
-    )
-
-    print(
-        "Processed testing shape:",
-        X_test_processed.shape
-    )
-
-
-    print("\nPipeline completed successfully")
-
-
-    return (
-        X_train_processed,
-        X_test_processed,
-        split.y_train,
-        split.y_test,
-        preprocessing_pipeline,
-    )
+# ============================================================
+# Entry point
+# ============================================================
 
 
 if __name__ == "__main__":
 
-    run_training_pipeline()
+    model, metrics = run_training_pipeline()
+
+    print("\n")
+
+    print("=" * 60)
+
+    print("Training completed successfully")
+
+    print("=" * 60)
+
+    for metric_name, metric_value in metrics.items():
+
+        print(f"{metric_name:<15}: {metric_value:.4f}")

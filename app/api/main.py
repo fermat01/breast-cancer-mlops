@@ -1,83 +1,169 @@
-from fastapi import FastAPI, Request, HTTPException
-from pydantic import BaseModel, Field
+"""
+FastAPI application.
+
+Responsibilities
+----------------
+- Expose REST API endpoints
+- Validate requests using Pydantic
+- Load MLflow registered model
+- Serve predictions
+- Expose Prometheus metrics
+"""
+
+from contextlib import asynccontextmanager
+
 import time
-import numpy as np
-from prometheus_client import start_http_server, Counter, Histogram
-import joblib
-from utils import preprocess_features, map_prediction_to_label
 
-app = FastAPI()
+from fastapi import FastAPI, Request
 
-# Prometheus metrics
-REQUEST_COUNT = Counter("request_count", "Request count", ["endpoint", "http_method", "http_status"])
-REQUEST_LATENCY = Histogram("request_latency_seconds", "Request latency", ["endpoint"])
+from fastapi.responses import Response
 
-# Define the Pydantic model with all 30 features
-class BreastCancerFeatures(BaseModel):
-    mean_radius: float = Field(...)
-    mean_texture: float = Field(...)
-    mean_perimeter: float = Field(...)
-    mean_area: float = Field(...)
-    mean_smoothness: float = Field(...)
-    mean_compactness: float = Field(...)
-    mean_concavity: float = Field(...)
-    mean_concave_points: float = Field(...)
-    mean_symmetry: float = Field(...)
-    mean_fractal_dimension: float = Field(...)
-    radius_error: float = Field(...)
-    texture_error: float = Field(...)
-    perimeter_error: float = Field(...)
-    area_error: float = Field(...)
-    smoothness_error: float = Field(...)
-    compactness_error: float = Field(...)
-    concavity_error: float = Field(...)
-    concave_points_error: float = Field(...)
-    symmetry_error: float = Field(...)
-    fractal_dimension_error: float = Field(...)
-    worst_radius: float = Field(...)
-    worst_texture: float = Field(...)
-    worst_perimeter: float = Field(...)
-    worst_area: float = Field(...)
-    worst_smoothness: float = Field(...)
-    worst_compactness: float = Field(...)
-    worst_concavity: float = Field(...)
-    worst_concave_points: float = Field(...)
-    worst_symmetry: float = Field(...)
-    worst_fractal_dimension: float = Field(...)
+from prometheus_client import (
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 
-# Load model once when starting app
-model = joblib.load("rf_model.joblib")
 
-@app.on_event("startup")
-async def startup_event():
-    start_http_server(8001)  # Prometheus metrics server
+from app.api.schemas import (
+    BreastCancerFeatures,
+)
+
+
+from app.services.predictor import (
+    predict,
+)
+
+
+from app.services.model_loader import (
+    load_model,
+)
+
+
+from app.metrics.prometheus import (
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+)
+
+# ============================================================
+# Lifespan management
+# ============================================================
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifecycle manager.
+
+    Startup:
+        - Load MLflow champion model
+
+    Shutdown:
+        - Cleanup resources if needed
+    """
+
+    # ----------------------------
+    # Startup
+    # ----------------------------
+
+    print("Loading MLflow model...")
+
+    load_model()
+
+    print("MLflow model loaded successfully")
+
+    yield
+
+    # ----------------------------
+    # Shutdown
+    # ----------------------------
+
+    print("Application shutting down")
+
+
+# ============================================================
+# FastAPI application
+# ============================================================
+
+
+app = FastAPI(
+    title="Breast Cancer ML API",
+    version="1.0.0",
+    description=("Machine Learning API " "using FastAPI, Pydantic and MLflow"),
+    lifespan=lifespan,
+)
+
+
+# ============================================================
+# Prometheus middleware
+# ============================================================
+
 
 @app.middleware("http")
-async def metrics_middleware(request: Request, call_next):
+async def prometheus_middleware(
+    request: Request,
+    call_next,
+):
+    """
+    Collect API metrics.
+    """
+
     start_time = time.time()
+
     response = await call_next(request)
+
     latency = time.time() - start_time
 
-    REQUEST_COUNT.labels(endpoint=request.url.path, http_method=request.method, http_status=response.status_code).inc()
-    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(latency)
+    REQUEST_COUNT.labels(
+        endpoint=request.url.path,
+        method=request.method,
+        status=response.status_code,
+    ).inc()
+
+    REQUEST_LATENCY.labels(
+        endpoint=request.url.path,
+    ).observe(latency)
+
     return response
+
+
+# ============================================================
+# Health endpoint
+# ============================================================
+
+
+@app.get("/health")
+def health():
+
+    return {"status": "ok"}
+
+
+# ============================================================
+# Prediction endpoint
+# ============================================================
+
 
 @app.post("/predict")
 def predict_endpoint(data: BreastCancerFeatures):
-    try:
-        # Convert input data to dict
-        input_dict = data.dict()
-        # Preprocess features to numpy array
-        features = preprocess_features(input_dict)
-        # Get numeric prediction
-        pred = model.predict(features)[0]
-        # Map to label
-        label = map_prediction_to_label(pred)
-        return {"prediction": label}
-    except ValueError as e:
-        # Missing or invalid input feature
-        raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
+    prediction = predict(data.model_dump())
+
+    label = "malignant" if prediction == 0 else "benign"
+
+    return {
+        "prediction": prediction,
+        "label": label,
+    }
+
+
+# ============================================================
+# Prometheus metrics endpoint
+# ============================================================
+
+
+@app.get("/metrics")
+def metrics():
+
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )

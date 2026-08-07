@@ -1,0 +1,23 @@
+artifact_path: file:///home/vianney/projects/all-stacks/data-science-projects/breast-cancer-mlops/mlartifacts/models/m-9d491ba2196d4b87ad572e8675bb5f9a/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.skops
+    predict_fn: predict
+    python_version: 3.12.3
+  sklearn:
+    code: null
+    pickled_model: model.skops
+    serialization_format: skops
+    sklearn_version: 1.9.0
+    skops_trusted_types: null
+mlflow_version: 3.15.1
+model_id: m-9d491ba2196d4b87ad572e8675bb5f9a
+model_size_bytes: 2580131
+model_uuid: m-9d491ba2196d4b87ad572e8675bb5f9a
+prompts: null
+run_id: d42964a5f0cf414e8544c69f47bbfefc
+utc_time_created: '2026-08-07 18:05:51.710246'

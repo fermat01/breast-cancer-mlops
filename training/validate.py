@@ -17,7 +17,6 @@ It should NOT:
 - Train models
 """
 
-
 from dataclasses import dataclass
 
 import pandas as pd
@@ -74,9 +73,7 @@ def validate_dataset(
     missing_values = X.isnull().sum().sum()
 
     if missing_values > 0:
-        errors.append(
-            f"Dataset contains {missing_values} missing values."
-        )
+        errors.append(f"Dataset contains {missing_values} missing values.")
 
     # -----------------------------
     # Check duplicated rows
@@ -84,9 +81,7 @@ def validate_dataset(
     duplicates = X.duplicated().sum()
 
     if duplicates > 0:
-        warnings.append(
-            f"Dataset contains {duplicates} duplicated rows."
-        )
+        warnings.append(f"Dataset contains {duplicates} duplicated rows.")
 
     # -----------------------------
     # Validate feature count
@@ -107,9 +102,7 @@ def validate_dataset(
     expected_targets = [0, 1]
 
     if unique_targets != expected_targets:
-        errors.append(
-            f"Unexpected target values: {unique_targets}"
-        )
+        errors.append(f"Unexpected target values: {unique_targets}")
 
     return ValidationResult(
         is_valid=len(errors) == 0,
@@ -130,9 +123,7 @@ if __name__ == "__main__":
     print("Dataset Validation")
     print("=" * 60)
 
-    print(
-        f"Valid: {result.is_valid}"
-    )
+    print(f"Valid: {result.is_valid}")
 
     if result.errors:
         print("\nErrors:")

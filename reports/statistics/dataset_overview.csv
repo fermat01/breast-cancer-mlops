@@ -1,0 +1,7 @@
+metric,value
+number_of_samples,569.0
+number_of_features,30.0
+feature_memory_usage_MB,0.13
+missing_values,0.0
+duplicate_rows,0.0
+target_classes,2.0

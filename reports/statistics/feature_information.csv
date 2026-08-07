@@ -1,0 +1,31 @@
+feature,dtype,unique_values
+mean radius,float64,456
+mean texture,float64,479
+mean perimeter,float64,522
+mean area,float64,539
+mean smoothness,float64,474
+mean compactness,float64,537
+mean concavity,float64,537
+mean concave points,float64,542
+mean symmetry,float64,432
+mean fractal dimension,float64,499
+radius error,float64,540
+texture error,float64,519
+perimeter error,float64,533
+area error,float64,528
+smoothness error,float64,547
+compactness error,float64,541
+concavity error,float64,533
+concave points error,float64,507
+symmetry error,float64,498
+fractal dimension error,float64,545
+worst radius,float64,457
+worst texture,float64,511
+worst perimeter,float64,514
+worst area,float64,544
+worst smoothness,float64,411
+worst compactness,float64,529
+worst concavity,float64,539
+worst concave points,float64,492
+worst symmetry,float64,500
+worst fractal dimension,float64,535

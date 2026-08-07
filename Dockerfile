@@ -1,15 +1,25 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
+
 
 WORKDIR /app
 
-COPY app/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app/ .
+COPY requirements.txt .
 
-# Copy the trained model file into the container
-COPY rf_model.joblib /app/
 
-EXPOSE 80 8001
+RUN pip install --no-cache-dir \
+    -r requirements.txt
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+
+COPY app ./app
+
+
+COPY mlflow.db .
+
+COPY mlartifacts ./mlartifacts
+
+
+EXPOSE 8000
+
+
+CMD ["uvicorn","app.api.main:app","--host","0.0.0.0","--port","8001"]

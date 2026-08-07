@@ -1,0 +1,30 @@
+feature_1,feature_2,correlation
+mean radius,mean perimeter,0.9978552814938109
+mean radius,mean area,0.9873571700566127
+mean radius,worst radius,0.9695389726112055
+mean radius,worst perimeter,0.9651365139559871
+mean radius,worst area,0.9410824595860461
+mean texture,worst texture,0.912044588840421
+mean perimeter,mean area,0.9865068039913907
+mean perimeter,mean concave points,0.8509770412528191
+mean perimeter,worst radius,0.9694763634663146
+mean perimeter,worst perimeter,0.9703868870426394
+mean perimeter,worst area,0.9415498080023068
+mean area,worst radius,0.9627460860470841
+mean area,worst perimeter,0.9591195743552645
+mean area,worst area,0.9592133256498998
+mean compactness,mean concavity,0.8831206701772507
+mean compactness,worst compactness,0.8658090398022629
+mean concavity,mean concave points,0.9213910263788588
+mean concavity,worst concavity,0.8841026390943817
+mean concavity,worst concave points,0.861323033637951
+mean concave points,worst perimeter,0.8559231281343119
+mean concave points,worst concave points,0.9101553142985918
+radius error,perimeter error,0.9727936770160764
+radius error,area error,0.951830112110991
+perimeter error,area error,0.9376554069544157
+worst radius,worst perimeter,0.993707916102949
+worst radius,worst area,0.9840145644590742
+worst perimeter,worst area,0.9775780914063871
+worst compactness,worst concavity,0.8922608987764685
+worst concavity,worst concave points,0.8554338603439982

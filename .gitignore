@@ -1,26 +1,44 @@
+# Environment variables and secrets
 .env
-commands.txt
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+*.env
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Databases and logs
 *.db
 *.sqlite3
 *.log
-*.env  
-venv/
-__pycache__/
+
+# Python packaging
 *.egg-info/
 dist/
 build/
 *.egg
 *.whl
-*.DS_Store
-*.coverage
+
+# Testing, type checking, and notebooks
+.pytest_cache/
+.mypy_cache/
+.coverage
 .coverage.*
-*.pytest_cache/
-*.mypy_cache/
-*.ipynb_checkpoints/
-*.vscode/
+.ipynb_checkpoints/
+
+# IDE and OS files
+.vscode/
+.DS_Store
+
+# ML experiment outputs
 mlruns/
+
+# Project-specific files
+commands.txt
 bcmlops/
+app/mlartifacts/

@@ -1,0 +1,10 @@
+{
+    "Dataset name": "Breast Cancer Wisconsin Diagnostic Dataset",
+    "Number of samples": 569,
+    "Number of features": 30,
+    "Feature type": "Numerical",
+    "Target classes": 2,
+    "Missing values": 0,
+    "Duplicate samples": 0,
+    "Memory usage MB": 0.13
+}
