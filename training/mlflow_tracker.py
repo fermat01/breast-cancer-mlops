@@ -2,7 +2,7 @@
 MLflow tracking utilities.
 
 Responsibilities
------------------
+----------------
 - Configure MLflow tracking
 - Create experiments
 - Start MLflow runs
@@ -12,17 +12,26 @@ Responsibilities
 - Register models
 - Manage model aliases
 
+Architecture
+------------
+Backend store:
+    PostgreSQL via MLflow Server
+
+Artifact store:
+    MinIO S3 via MLflow Server
+
 Compatible with:
-- Local development
-- Docker
-- MLflow Model Registry
+    - Local development
+    - Docker Compose
+    - MLflow Model Registry
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 import mlflow
 import mlflow.sklearn
+
 from mlflow.tracking import MlflowClient
 
 # ============================================================
@@ -31,11 +40,11 @@ from mlflow.tracking import MlflowClient
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ARTIFACT_DIR = PROJECT_ROOT / "mlartifacts"
+
 
 TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING_URI",
-    "sqlite:///mlflow.db",
+    "http://localhost:5000",
 )
 
 
@@ -45,27 +54,11 @@ EXPERIMENT_NAME = os.getenv(
 )
 
 
-# Local development artifact folder
-ARTIFACTS_DIR = Path(
-    os.getenv(
-        "MLFLOW_ARTIFACTS_DIR",
-        str(PROJECT_ROOT / "mlartifacts"),
-    )
-)
-
-
-ARTIFACTS_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
-
-ARTIFACT_LOCATION = ARTIFACTS_DIR.resolve().as_uri()
-
 MODEL_NAME = os.getenv(
     "MODEL_NAME",
     "breast-cancer-classifier",
 )
+
 
 # ============================================================
 # MLflow configuration
@@ -74,7 +67,12 @@ MODEL_NAME = os.getenv(
 
 def configure_mlflow():
     """
-    Configure MLflow backend and experiment.
+    Configure MLflow tracking server.
+
+    MLflow server handles:
+    - PostgreSQL backend
+    - MinIO artifact storage
+    - Model Registry
     """
 
     mlflow.set_tracking_uri(TRACKING_URI)
@@ -83,10 +81,7 @@ def configure_mlflow():
 
     if experiment is None:
 
-        mlflow.create_experiment(
-            name=EXPERIMENT_NAME,
-            artifact_location=ARTIFACT_LOCATION,
-        )
+        mlflow.create_experiment(name=EXPERIMENT_NAME)
 
     mlflow.set_experiment(EXPERIMENT_NAME)
 
@@ -109,7 +104,7 @@ def start_run(
 
 
 # ============================================================
-# Logging
+# Parameters logging
 # ============================================================
 
 
@@ -123,6 +118,11 @@ def log_parameters(
     mlflow.log_params(params)
 
 
+# ============================================================
+# Metrics logging
+# ============================================================
+
+
 def log_metrics(
     metrics: dict,
 ):
@@ -133,11 +133,23 @@ def log_metrics(
     mlflow.log_metrics(metrics)
 
 
+# ============================================================
+# Artifact logging
+# ============================================================
+
+
 def log_directory(
     directory: Path,
 ):
     """
-    Log directory as MLflow artifact.
+    Upload directory artifacts.
+
+    Example:
+        reports/
+        plots/
+        evaluation files
+
+    Stored automatically in MinIO.
     """
 
     if directory.exists():
@@ -146,7 +158,7 @@ def log_directory(
 
 
 # ============================================================
-# Model logging
+# Model logging + Registry
 # ============================================================
 
 
@@ -154,7 +166,9 @@ def log_model(
     model,
 ):
     """
-    Log sklearn model and register it.
+    Log sklearn model.
+
+    Registers model into MLflow Model Registry.
     """
 
     model_info = mlflow.sklearn.log_model(
@@ -198,7 +212,7 @@ def set_model_alias(
 
 
 # ============================================================
-# Helper
+# Model URI helper
 # ============================================================
 
 
@@ -206,7 +220,10 @@ def get_model_uri(
     alias: str = "champion",
 ):
     """
-    Return MLflow model URI.
+    Return MLflow Model Registry URI.
+
+    Example:
+        models:/breast-cancer-classifier@champion
     """
 
     return f"models:/{MODEL_NAME}@{alias}"

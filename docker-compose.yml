@@ -1,22 +1,86 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: mlflow-postgres
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mlops-network
+  minio:
+    image: minio/minio:latest
+    container_name: mlflow-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio77
+    ports:
+      - "9010:9000"
+      - "9011:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - mlops-network
+
+  minio-create-bucket:
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set minio http://minio:9000 minio mlflow77;
+      mc mb minio/mlflow-artifacts;
+      exit 0;
+      "
+    networks:
+      - mlops-network
+
+  mlflow:
+    build:
+      context: ./mlflow
+    container_name: mlflow-server
+    depends_on:
+      - postgres
+      - minio
+    ports:
+      - "5000:5000"
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: mlflow77
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
+      --default-artifact-root s3://mlflow-artifacts/
+      --host 0.0.0.0
+    networks:
+      - mlops-network
+
   fastapi:
     build:
       context: .
     container_name: breast-cancer-api
     ports:
       - "8001:8000"
-
     environment:
-          MLFLOW_TRACKING_URI: sqlite:///mlflow.db
-          MLFLOW_ARTIFACTS_DIR: /app/mlartifacts
-          MODEL_NAME: breast-cancer-classifier
-          MODEL_ALIAS: champion
-
-    volumes:
-      - ./mlflow.db:/app/mlflow.db
-      - ./mlartifacts:/app/mlartifacts
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: mlflow77
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MODEL_NAME: breast-cancer-classifier
+      MODEL_ALIAS: champion
+    depends_on:
+      - mlflow
     networks:
       - mlops-network
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -24,8 +88,6 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - fastapi
     networks:
       - mlops-network
   grafana:
@@ -37,6 +99,9 @@ services:
       - prometheus
     networks:
       - mlops-network
+volumes:
+  postgres-data:
+  minio-data:
 networks:
   mlops-network:
     driver: bridge

@@ -70,3 +70,33 @@ with:
 PostgreSQL/RDS
 +
 S3 artifact store
+
+
+------------------------------------- Production --------------------------------------------------------
+
+we can update it to use PostgreSQL as MLflow backend store and MinIO as S3-compatible artifact store. In fact, this is a better architecture for your MLOps 
+project because it matches the production pattern you will later deploy on AWS
+
+
+
+
+
+                 Training
+                    |
+                    |
+              MLflow Tracking
+                    |
+        +-----------+------------+
+        |                        |
+        v                        v
+ PostgreSQL                MinIO S3
+(metadata)               (artifacts)
+        |
+        |
+        v
+ MLflow Model Registry
+        |
+        |
+        v
+ FastAPI
+(load champion model)
