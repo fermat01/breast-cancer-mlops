@@ -100,3 +100,57 @@ project because it matches the production pattern you will later deploy on AWS
         v
  FastAPI
 (load champion model)
+
+
+
+------------------------- posgres database logging -----------------------------
+
+
+docker compose exec postgres psql -U mlflow -d mlflow
+
+
+
+SELECT
+name,
+version,
+run_id
+FROM model_versions;
+
+
+
+-----------------------------------------------
+
+export AWS_ACCESS_KEY_ID=minio
+export AWS_SECRET_ACCESS_KEY=mlflow77
+export MLFLOW_S3_ENDPOINT_URL=http://localhost:9010
+export MLFLOW_TRACKING_URI=http://localhost:5000
+
+---- or 
+
+set -a
+source .env
+set +a
+
+
+
+-------------------------- shell scripts to verify the alias -----------------------------
+
+
+python -c "
+import mlflow
+from mlflow import MlflowClient
+
+mlflow.set_tracking_uri('http://localhost:5000')
+
+client = MlflowClient()
+
+model = client.get_model_version_by_alias(
+    'breast-cancer-classifier',
+    'champion'
+)
+
+print('Model:', model.name)
+print('Version:', model.version)
+print('Aliases:', model.aliases)
+print('Source:', model.source)
+"
