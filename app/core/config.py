@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # Application
     # --------------------------------------------------------
 
-    app_name: str = "Breast Cancer ML API"
+    app_name: str = "Breast Cancer Machine Learning API"
     app_version: str = "1.0.0"
     environment: str = "development"
     debug: bool = False

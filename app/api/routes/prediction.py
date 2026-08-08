@@ -28,10 +28,12 @@ def create_prediction(
 ):
     """
     Generate a breast cancer prediction.
+
+    Handles expected prediction failures and returns
+    appropriate HTTP status codes.
     """
 
     try:
-
         result = predict(
             request.features
         )
@@ -40,8 +42,26 @@ def create_prediction(
             **result
         )
 
-    except RuntimeError as exc:
+    # --------------------------------------------------------
+    # Invalid prediction input
+    # --------------------------------------------------------
 
+    except ValueError as exc:
+        logger.warning(
+            "Invalid prediction input: %s",
+            exc,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    # --------------------------------------------------------
+    # Model/service unavailable
+    # --------------------------------------------------------
+
+    except RuntimeError as exc:
         logger.error(
             "Prediction service unavailable: %s",
             exc,
@@ -49,16 +69,20 @@ def create_prediction(
 
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        )
+            detail="Prediction service is currently unavailable.",
+        ) from exc
+
+    # --------------------------------------------------------
+    # Unexpected prediction error
+    # --------------------------------------------------------
 
     except Exception as exc:
-
         logger.exception(
-            "Prediction failed."
+            "Unexpected prediction error."
         )
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Prediction failed.",
+            detail="An unexpected error occurred while generating the prediction.",
         ) from exc
+
