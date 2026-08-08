@@ -8,6 +8,25 @@
 
 This MLOps project provides a complete workflow for building, serving, monitoring, and deploying a machine learning model that classifies breast cancer using the Wisconsin dataset. The model is trained using scikit-learn's Random Forest implementation, tracked with MLflow, and served via FastAPI. Prometheus monitoring is integrated for observability, and the application is containerized with Docker and deployable via an automated GitHub Actions-based CI/CD pipeline targeting AWS ECS with Fargate.
 
+
+
+
+                                            Dataset
+                                              ↓
+                                            Validation
+                                              ↓
+                                            Training
+                                              ↓
+                                            MLflow
+                                              ├── PostgreSQL → metadata / registry
+                                              └── MinIO S3   → model artifacts
+                                              ↓
+                                            FastAPI
+                                              ↓
+                                            Prometheus
+                                              ↓
+                                            Grafana
+
 ---
 
 ## Table of Contents
@@ -68,6 +87,80 @@ breast-cancer-mlops/
 ├── requirements.txt
 └── README.md
 ```
+
+
+
+# --------------------------------------------- New architecture -----------------------
+
+                        app/
+                        ├── api/
+                        │   ├── main.py
+                        │   ├── dependencies.py
+                        │   └── routes/
+                        │       ├── health.py
+                        │       ├── prediction.py
+                        │       └── model.py
+                        │
+                        ├── core/
+                        │   ├── config.py
+                        │   └── logging.py
+                        │
+                        ├── schemas/
+                        │   ├── prediction.py
+                        │   └── health.py
+                        │
+                        ├── services/
+                        │   ├── model_loader.py
+                        │   └── predictor.py
+                        │
+                        └── __init__.py
+
+
+                        New API becomes 
+
+
+
+                        
+                         ┌─────────────────┐
+                         │     Client      │
+                         └────────┬────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │    FastAPI      │
+                         └────────┬────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              ▼                   ▼                   ▼
+        /health             /predictions           /model
+              │                   │
+              │                   ▼
+              │             ┌─────────────┐
+              │             │  Predictor  │
+              │             └──────┬──────┘
+              │                    │
+              │                    ▼
+              │             ┌─────────────┐
+              │             │ ModelLoader │
+              │             └──────┬──────┘
+              │                    │
+              │                    ▼
+              │             ┌─────────────┐
+              │             │   MLflow    │
+              │             └──────┬──────┘
+              │                    │
+              │          ┌─────────┴─────────┐
+              │          ▼                   ▼
+              │     PostgreSQL             MinIO
+              │     Registry              Artifacts
+              │
+              ▼
+        Prometheus
+              │
+              ▼
+           Grafana
+
+
 
 ---
 

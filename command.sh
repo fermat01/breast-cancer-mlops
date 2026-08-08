@@ -154,3 +154,7 @@ print('Version:', model.version)
 print('Aliases:', model.aliases)
 print('Source:', model.source)
 "
+
+# ----------------------------- From terminal get the features ---
+
+python -c "from training.data_loader import load_dataset; d=load_dataset(); print(d.features.columns.tolist())"

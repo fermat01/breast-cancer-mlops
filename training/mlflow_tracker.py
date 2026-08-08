@@ -10,6 +10,7 @@ Responsibilities
 - Log metrics
 - Log artifacts
 - Register models
+- Store model metadata
 - Manage model aliases
 
 Architecture
@@ -26,8 +27,10 @@ Compatible with:
     - MLflow Model Registry
 """
 
+import json
 import os
 from pathlib import Path
+from typing import Any
 
 import mlflow
 import mlflow.sklearn
@@ -38,26 +41,32 @@ from mlflow.tracking import MlflowClient
 # Configuration
 # ============================================================
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
 
 TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING_URI",
     "http://localhost:5000",
 )
 
-
 EXPERIMENT_NAME = os.getenv(
     "MLFLOW_EXPERIMENT_NAME",
     "breast-cancer-classification",
 )
 
-
 MODEL_NAME = os.getenv(
     "MODEL_NAME",
     "breast-cancer-classifier",
 )
+
+
+# ============================================================
+# Model metadata
+# ============================================================
+
+CLASS_LABELS: dict[int, str] = {
+    0: "malignant",
+    1: "benign",
+}
 
 
 # ============================================================
@@ -70,6 +79,7 @@ def configure_mlflow():
     Configure MLflow tracking server.
 
     MLflow server handles:
+
     - PostgreSQL backend
     - MinIO artifact storage
     - Model Registry
@@ -80,7 +90,6 @@ def configure_mlflow():
     experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
 
     if experiment is None:
-
         mlflow.create_experiment(name=EXPERIMENT_NAME)
 
     mlflow.set_experiment(EXPERIMENT_NAME)
@@ -109,7 +118,7 @@ def start_run(
 
 
 def log_parameters(
-    params: dict,
+    params: dict[str, Any],
 ):
     """
     Log ML parameters.
@@ -124,7 +133,7 @@ def log_parameters(
 
 
 def log_metrics(
-    metrics: dict,
+    metrics: dict[str, float],
 ):
     """
     Log evaluation metrics.
@@ -144,16 +153,17 @@ def log_directory(
     """
     Upload directory artifacts.
 
-    Example:
+    Examples:
+
         reports/
         plots/
         evaluation files
 
-    Stored automatically in MinIO.
+    Artifacts are stored automatically in MinIO
+    through the MLflow server configuration.
     """
 
     if directory.exists():
-
         mlflow.log_artifacts(str(directory))
 
 
@@ -166,9 +176,11 @@ def log_model(
     model,
 ):
     """
-    Log sklearn model.
+    Log sklearn model and register it
+    in the MLflow Model Registry.
 
-    Registers model into MLflow Model Registry.
+    The class-label mapping is stored as
+    model-version metadata.
     """
 
     model_info = mlflow.sklearn.log_model(
@@ -176,6 +188,37 @@ def log_model(
         name="model",
         registered_model_name=MODEL_NAME,
     )
+
+    # --------------------------------------------------------
+    # Get registered model version
+    # --------------------------------------------------------
+
+    client = MlflowClient(tracking_uri=TRACKING_URI)
+
+    model_version = None
+
+    if model_info.registered_model_version:
+        model_version = str(model_info.registered_model_version)
+
+    # --------------------------------------------------------
+    # Store class labels on the model version
+    # --------------------------------------------------------
+
+    if model_version is not None:
+
+        client.set_model_version_tag(
+            name=MODEL_NAME,
+            version=model_version,
+            key="class_labels",
+            value=json.dumps(CLASS_LABELS),
+        )
+
+        client.set_model_version_tag(
+            name=MODEL_NAME,
+            version=model_version,
+            key="model_type",
+            value="binary_classification",
+        )
 
     return model_info
 
@@ -193,10 +236,11 @@ def set_model_alias(
     Assign alias to registered model.
 
     Example:
+
         champion
     """
 
-    client = MlflowClient()
+    client = MlflowClient(tracking_uri=TRACKING_URI)
 
     client.set_registered_model_alias(
         name=MODEL_NAME,
@@ -212,6 +256,38 @@ def set_model_alias(
 
 
 # ============================================================
+# Model metadata
+# ============================================================
+
+
+def get_model_metadata(
+    version: int,
+) -> dict[str, Any]:
+    """
+    Retrieve metadata stored on a registered model version.
+    """
+
+    client = MlflowClient(tracking_uri=TRACKING_URI)
+
+    model_version = client.get_model_version(
+        name=MODEL_NAME,
+        version=str(version),
+    )
+
+    metadata: dict[str, Any] = {}
+
+    for key, value in model_version.tags.items():
+
+        try:
+            metadata[key] = json.loads(value)
+
+        except (json.JSONDecodeError, TypeError):
+            metadata[key] = value
+
+    return metadata
+
+
+# ============================================================
 # Model URI helper
 # ============================================================
 
@@ -223,6 +299,7 @@ def get_model_uri(
     Return MLflow Model Registry URI.
 
     Example:
+
         models:/breast-cancer-classifier@champion
     """
 

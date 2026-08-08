@@ -10,160 +10,108 @@ Responsibilities
 - Expose Prometheus metrics
 """
 
+
 from contextlib import asynccontextmanager
 
-import time
+from fastapi import FastAPI
 
-from fastapi import FastAPI, Request
-
-from fastapi.responses import Response
-
-from prometheus_client import (
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
+from app.api.routes import health
+from app.api.routes import model
+from app.api.routes import prediction
+from app.core.config import get_settings
+from app.core.logging import configure_logging, get_logger
+from app.services.model_loader import load_model
 
 
-from app.api.schemas import (
-    BreastCancerFeatures,
-)
+configure_logging()
 
+logger = get_logger(__name__)
 
-from app.services.predictor import (
-    predict,
-)
-
-
-from app.services.model_loader import (
-    load_model,
-)
-
-
-from app.metrics.prometheus import (
-    REQUEST_COUNT,
-    REQUEST_LATENCY,
-)
-
-# ============================================================
-# Lifespan management
-# ============================================================
+settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifecycle manager.
-
-    Startup:
-        - Load MLflow champion model
-
-    Shutdown:
-        - Cleanup resources if needed
+    Application startup/shutdown lifecycle.
     """
 
-    # ----------------------------
-    # Startup
-    # ----------------------------
+    logger.info(
+        "Starting %s v%s",
+        settings.app_name,
+        settings.app_version,
+    )
 
-    print("Loading MLflow model...")
+    # --------------------------------------------------------
+    # Startup
+    # --------------------------------------------------------
+
+    logger.info(
+        "Loading ML model..."
+    )
 
     load_model()
 
-    print("MLflow model loaded successfully")
+    logger.info(
+        "Application startup completed."
+    )
 
     yield
 
-    # ----------------------------
+    # --------------------------------------------------------
     # Shutdown
-    # ----------------------------
+    # --------------------------------------------------------
 
-    print("Application shutting down")
-
-
-# ============================================================
-# FastAPI application
-# ============================================================
+    logger.info(
+        "Application shutting down."
+    )
 
 
 app = FastAPI(
-    title="Breast Cancer ML API",
-    version="1.0.0",
-    description=("Machine Learning API " "using FastAPI, Pydantic and MLflow"),
+    title=settings.app_name,
+    version=settings.app_version,
+    description=(
+        "Breast Cancer Classification API "
+        "powered by MLflow."
+    ),
     lifespan=lifespan,
 )
 
 
 # ============================================================
-# Prometheus middleware
+# Routes
 # ============================================================
 
+app.include_router(
+    health.router,
+    prefix=settings.api_prefix,
+)
 
-@app.middleware("http")
-async def prometheus_middleware(
-    request: Request,
-    call_next,
-):
+app.include_router(
+    prediction.router,
+    prefix=settings.api_prefix,
+)
+
+app.include_router(
+    model.router,
+    prefix=settings.api_prefix,
+)
+
+
+# ============================================================
+# Root
+# ============================================================
+
+@app.get("/")
+def root():
     """
-    Collect API metrics.
+    API root endpoint.
     """
-
-    start_time = time.time()
-
-    response = await call_next(request)
-
-    latency = time.time() - start_time
-
-    REQUEST_COUNT.labels(
-        endpoint=request.url.path,
-        method=request.method,
-        status=response.status_code,
-    ).inc()
-
-    REQUEST_LATENCY.labels(
-        endpoint=request.url.path,
-    ).observe(latency)
-
-    return response
-
-
-# ============================================================
-# Health endpoint
-# ============================================================
-
-
-@app.get("/health")
-def health():
-
-    return {"status": "ok"}
-
-
-# ============================================================
-# Prediction endpoint
-# ============================================================
-
-
-@app.post("/predict")
-def predict_endpoint(data: BreastCancerFeatures):
-
-    prediction = predict(data.model_dump())
-
-    label = "malignant" if prediction == 0 else "benign"
 
     return {
-        "prediction": prediction,
-        "label": label,
+        "service": settings.app_name,
+        "version": settings.app_version,
+        "docs": "/docs",
+        "health": f"{settings.api_prefix}/health",
+        "ready": f"{settings.api_prefix}/health/ready",
     }
-
-
-# ============================================================
-# Prometheus metrics endpoint
-# ============================================================
-
-
-@app.get("/metrics")
-def metrics():
-
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST,
-    )
