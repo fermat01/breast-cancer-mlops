@@ -158,3 +158,16 @@ print('Source:', model.source)
 # ----------------------------- From terminal get the features ---
 
 python -c "from training.data_loader import load_dataset; d=load_dataset(); print(d.features.columns.tolist())"
+
+
+
+
+# ------------------------------ Unit test the API -----------------------------
+
+# predictor  unit test
+pytest tests/unit/test_predictor.py -v
+pytest -V
+
+
+# Integration tests for the prediction API.
+pytest tests/integration/test_prediction_api.py -v
