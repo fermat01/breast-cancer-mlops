@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-scikit-learn
-pandas
-joblib
-mlflow
-prometheus_client
-pytest
-httpx

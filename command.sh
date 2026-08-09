@@ -9,7 +9,41 @@ python -m training.train
 
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 
+#####################
 
+## Start docker compose with env for prod
+
+docker exec breast-cancer-api env | grep -E 'MLFLOW|AWS|MODEL'
+
+docker compose --env-file .env config
+
+docker compose --env-file .env up -d 
+
+docker compose --env-file .env down
+
+
+
+                  HOST MACHINE
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+   localhost:8001             localhost:5000
+          │                         │
+          ▼                         ▼
+    ┌───────────┐             ┌───────────┐
+    │  FastAPI  │             │  MLflow   │
+    │ container │             │ container │
+    └─────┬─────┘             └─────┬─────┘
+          │                         │
+          │    Docker network       │
+          │                         │
+          └──────────┬──────────────┘
+                     │
+                     ▼
+                ┌─────────┐
+                │  MinIO  │
+                │ :9000   │
+                └─────────┘
 
 #promoted with alias for Production
 
@@ -214,4 +248,25 @@ LOG_LEVEL             →      log_level
                 ↓                     ↓
              FastAPI              MLflow
                 ↓                     ↓
-             config              model URI
+             config              model URI 
+
+
+# ------------------------------- Dockernize complete application -----------------------------
+
+                    ┌──────────────┐
+                    │   FastAPI    │
+                    │   :8001      │
+                    └──────┬───────┘
+                           │
+                           ▼
+                    ┌──────────────┐
+                    │   MLflow     │
+                    │   :5000      │
+                    └──────┬───────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+       ┌──────────────┐          ┌──────────────┐
+       │ PostgreSQL   │          │    MinIO     │
+       │   metadata   │          │  artifacts   │
+       └──────────────┘          └──────────────┘

@@ -1,6 +1,41 @@
-__pycache__
-*.pyc
+__pycache__/
+*.py[cod]
 *.pyo
+
+# Python virtual environments
+bcmlops/
+.venv/
+venv/
+
+# Environment files
 .env
-.git
-mlruns
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# MLflow local data
+mlruns/
+mlartifacts/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
