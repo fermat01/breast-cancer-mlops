@@ -2,14 +2,13 @@
 Application Prometheus metrics.
 
 Defines metrics used to monitor the FastAPI
-prediction service.
+breast cancer prediction service.
 """
 
 from prometheus_client import Counter, Gauge, Histogram
 
-
 # ============================================================
-# Prediction metrics
+# Prediction request metrics
 # ============================================================
 
 PREDICTION_REQUESTS_TOTAL = Counter(
@@ -17,10 +16,12 @@ PREDICTION_REQUESTS_TOTAL = Counter(
     "Total number of prediction requests.",
 )
 
+
 PREDICTION_SUCCESS_TOTAL = Counter(
     "prediction_success_total",
     "Total number of successful predictions.",
 )
+
 
 PREDICTION_ERRORS_TOTAL = Counter(
     "prediction_errors_total",
@@ -67,5 +68,9 @@ PREDICTIONS_BY_CLASS = Counter(
 MODEL_INFO = Gauge(
     "model_info",
     "Information about the currently loaded ML model.",
-    ["model_name", "model_alias", "model_version"],
+    [
+        "model_name",
+        "model_alias",
+        "model_version",
+    ],
 )
