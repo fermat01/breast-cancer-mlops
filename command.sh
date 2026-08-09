@@ -171,3 +171,47 @@ pytest -V
 
 # Integration tests for the prediction API.
 pytest tests/integration/test_prediction_api.py -v
+
+
+This setup provides a more robust and scalable solution for managing machine learning models in a
+production-oriented MLOps architecture.
+
+
+
+# ------------------------------- Environment Variables -----------------------------
+
+
+.env                         Settings
+────────────────────────────────────────────
+APP_NAME              →      app_name
+APP_VERSION           →      app_version
+ENVIRONMENT           →      environment
+DEBUG                 →      debug
+
+MLFLOW_TRACKING_URI   →      mlflow_tracking_uri
+
+MODEL_NAME            →      model_name
+MODEL_ALIAS           →      model_alias
+
+AWS_ACCESS_KEY_ID     →      aws_access_key_id
+AWS_SECRET_ACCESS_KEY →      aws_secret_access_key
+
+MLFLOW_S3_ENDPOINT_URL →     mlflow_s3_endpoint_url
+
+API_PREFIX            →      api_prefix
+LOG_LEVEL             →      log_level 
+
+
+                 ┌────────────────────┐
+                 │   .env (local)     │
+                 │                    │
+                 │ credentials        │
+                 └─────────┬──────────┘
+                           ↓
+                    Pydantic Settings
+                           ↓
+                ┌──────────┴──────────┐
+                ↓                     ↓
+             FastAPI              MLflow
+                ↓                     ↓
+             config              model URI

@@ -1,4 +1,4 @@
-fastapi
+
 uvicorn[standard]
 pydantic
 numpy
@@ -7,11 +7,14 @@ scikit-learn
 joblib
 mlflow
 prometheus-client
-pytest
-pytest-cov
-httpx
 python-dotenv
 mlflow
 psycopg2-binary
 boto3
-pydantic-settings
+pydantic-settings 
+fastapi==0.141.1
+
+pytest==9.1.1
+pytest-cov==7.0.0
+httpx==0.28.1
+httpx2

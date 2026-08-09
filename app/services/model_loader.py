@@ -3,13 +3,19 @@ MLflow model loading service.
 
 Responsibilities:
 
+- Configure MLflow artifact-store credentials
 - Load the MLflow model during application startup
 - Keep the loaded model in memory
 - Resolve the configured MLflow model alias
 - Expose model metadata/version
 - Provide model loading status
+
+Credentials are never hard-coded here.
+They are loaded from application settings and configured
+through environment variables for MLflow's S3/MinIO integration.
 """
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -44,9 +50,59 @@ class ModelMetadata:
 # Global model state
 # ============================================================
 
-_model: Any | None = None
 
+_model: Any | None = None
 _model_metadata: ModelMetadata | None = None
+
+
+# ============================================================
+# Configure artifact storage
+# ============================================================
+
+
+def configure_artifact_storage() -> None:
+    """
+    Configure MLflow artifact-store credentials.
+
+    MLflow uses these environment variables when accessing
+    S3-compatible artifact storage such as MinIO.
+
+    Credentials come from the application settings and are
+    never hard-coded in this module.
+    """
+
+    settings = get_settings()
+
+    # --------------------------------------------------------
+    # AWS / S3 credentials
+    # --------------------------------------------------------
+
+    if settings.aws_access_key_id:
+        os.environ["AWS_ACCESS_KEY_ID"] = settings.aws_access_key_id
+
+    if settings.aws_secret_access_key:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = (
+            settings.aws_secret_access_key
+        )
+
+    # --------------------------------------------------------
+    # S3-compatible endpoint
+    # --------------------------------------------------------
+
+    if settings.mlflow_s3_endpoint_url:
+        os.environ["MLFLOW_S3_ENDPOINT_URL"] = (
+            settings.mlflow_s3_endpoint_url
+        )
+
+    logger.info(
+        "MLflow artifact storage configured."
+    )
+
+    if settings.mlflow_s3_endpoint_url:
+        logger.info(
+            "MLflow artifact endpoint: %s",
+            settings.mlflow_s3_endpoint_url,
+        )
 
 
 # ============================================================
@@ -59,6 +115,16 @@ def load_model() -> Any:
     Load the MLflow model configured by the application.
 
     The model is loaded once during application startup.
+
+    Returns
+    -------
+    Any
+        Loaded MLflow PyFunc model.
+
+    Raises
+    ------
+    RuntimeError
+        If the model cannot be resolved or loaded.
     """
 
     global _model
@@ -81,7 +147,13 @@ def load_model() -> Any:
     )
 
     # --------------------------------------------------------
-    # Configure MLflow
+    # Configure artifact storage
+    # --------------------------------------------------------
+
+    configure_artifact_storage()
+
+    # --------------------------------------------------------
+    # Configure MLflow tracking
     # --------------------------------------------------------
 
     mlflow.set_tracking_uri(tracking_uri)
@@ -102,13 +174,15 @@ def load_model() -> Any:
 
     except Exception as exc:
         logger.exception(
-            "Unable to resolve MLflow model alias: " "model=%s alias=%s",
+            "Unable to resolve MLflow model alias: "
+            "model=%s alias=%s",
             model_name,
             model_alias,
         )
 
         raise RuntimeError(
-            f"Unable to resolve MLflow model " f"'{model_name}@{model_alias}'."
+            f"Unable to resolve MLflow model "
+            f"'{model_name}@{model_alias}'."
         ) from exc
 
     # --------------------------------------------------------
@@ -118,7 +192,8 @@ def load_model() -> Any:
     version = str(model_version.version)
 
     logger.info(
-        "Resolved MLflow model: " "model=%s alias=%s version=%s",
+        "Resolved MLflow model: "
+        "model=%s alias=%s version=%s",
         model_name,
         model_alias,
         version,
@@ -140,7 +215,8 @@ def load_model() -> Any:
         )
 
         raise RuntimeError(
-            f"Unable to load MLflow model " f"'{settings.model_uri}'."
+            f"Unable to load MLflow model "
+            f"'{settings.model_uri}'."
         ) from exc
 
     # --------------------------------------------------------
@@ -162,7 +238,8 @@ def load_model() -> Any:
     )
 
     logger.info(
-        "MLflow model loaded successfully: " "model=%s alias=%s version=%s run_id=%s",
+        "MLflow model loaded successfully: "
+        "model=%s alias=%s version=%s run_id=%s",
         model_name,
         model_alias,
         version,
@@ -188,7 +265,9 @@ def get_model() -> Any:
     """
 
     if _model is None:
-        raise RuntimeError("ML model has not been loaded.")
+        raise RuntimeError(
+            "ML model has not been loaded."
+        )
 
     return _model
 
@@ -222,6 +301,9 @@ def get_model_metadata() -> ModelMetadata:
     """
 
     if _model_metadata is None:
-        raise RuntimeError("ML model metadata is not available.")
+        raise RuntimeError(
+            "ML model metadata is not available."
+        )
 
     return _model_metadata
+
