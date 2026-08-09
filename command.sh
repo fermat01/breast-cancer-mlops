@@ -6,6 +6,10 @@ rm -rf mlartifacts
 
 python -m training.train
 
+#promoted with alias for Production
+
+ python -m training.assign_model_alias
+
 
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 
@@ -45,9 +49,6 @@ docker compose --env-file .env down
                 │ :9000   │
                 └─────────┘
 
-#promoted with alias for Production
-
- python -m training.assign_model_alias
 
  
 
@@ -267,6 +268,63 @@ LOG_LEVEL             →      log_level
               ┌────────────┴────────────┐
               ▼                         ▼
        ┌──────────────┐          ┌──────────────┐
-       │ PostgreSQL   │          │    MinIO     │
+       │ PostgreSQL   │          │    MinIO     │ 
        │   metadata   │          │  artifacts   │
-       └──────────────┘          └──────────────┘
+       └──────────────┘          └──────────────┘     
+
+
+
+
+
+
+       # ------------------------------- Monitoring grafana + prometheus -----------------------------
+
+
+
+                                              
+
+
+
+                         ┌─────────────────────┐
+                         │      Client         │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │      FastAPI        │
+                         │                     │
+                         │ /predictions        │
+                         │ /health             │
+                         │ /health/ready       │
+                         │ /model              │
+                         │ /metrics            │
+                         └───────┬─────────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+                    ▼                         ▼
+             ┌──────────────┐         ┌──────────────┐
+             │ MLflow    │            │  Prometheus  │
+             │ Model        │         │    :9090     │
+             │ Registry     │         └──────┬───────┘
+             └──────────────┘                │
+                                             ▼
+                                      ┌──────────────┐
+                                      │   Grafana    │
+                                      │    :3000     │
+                                      └──────────────┘
+
+       # Test dev mode with uvicorn and curl
+
+        uvicorn app.api.main:app --reload --port 8001
+       curl http://localhost:8001/api/v1/metrics
+       curl http://localhost:8001/api/v1/health
+
+       curl http://localhost:8001/api/v1/model 
+
+
+       prometheus ui to see metrics 
+
+       http://localhost:9090/targets 
+
+       docker exec prometheus wget -qO- http://fastapi:8000/metrics

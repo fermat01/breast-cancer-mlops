@@ -1,8 +1,8 @@
 """
 FastAPI application.
 
-Responsibilities
-----------------
+Responsibilities:
+
 - Expose REST API endpoints
 - Validate requests using Pydantic
 - Load MLflow registered model
@@ -10,24 +10,32 @@ Responsibilities
 - Expose Prometheus metrics
 """
 
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api.routes import health
+from app.api.routes import metrics
 from app.api.routes import model
 from app.api.routes import prediction
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.services.model_loader import load_model
 
+# ============================================================
+# Application configuration
+# ============================================================
 
 configure_logging()
 
 logger = get_logger(__name__)
 
 settings = get_settings()
+
+
+# ============================================================
+# Application lifespan
+# ============================================================
 
 
 @asynccontextmanager
@@ -46,15 +54,11 @@ async def lifespan(app: FastAPI):
     # Startup
     # --------------------------------------------------------
 
-    logger.info(
-        "Loading ML model..."
-    )
+    logger.info("Loading ML model...")
 
     load_model()
 
-    logger.info(
-        "Application startup completed."
-    )
+    logger.info("Application startup completed.")
 
     yield
 
@@ -62,24 +66,23 @@ async def lifespan(app: FastAPI):
     # Shutdown
     # --------------------------------------------------------
 
-    logger.info(
-        "Application shutting down."
-    )
+    logger.info("Application shutting down.")
 
+
+# ============================================================
+# FastAPI application
+# ============================================================
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description=(
-        "Breast Cancer Classification API "
-        "powered by MLflow."
-    ),
+    description=("Breast Cancer Classification API " "powered by MLflow."),
     lifespan=lifespan,
 )
 
 
 # ============================================================
-# Routes
+# API routes
 # ============================================================
 
 app.include_router(
@@ -99,8 +102,22 @@ app.include_router(
 
 
 # ============================================================
-# Root
+# Prometheus metrics
 # ============================================================
+
+# Keep Prometheus metrics outside /api/v1.
+# Prometheus will scrape:
+# http://fastapi:8000/metrics
+
+app.include_router(
+    metrics.router,
+)
+
+
+# ============================================================
+# Root endpoint
+# ============================================================
+
 
 @app.get("/")
 def root():
