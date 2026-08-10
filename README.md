@@ -81,7 +81,7 @@ For observability, the application exposes Prometheus metrics covering predictio
 The current architecture uses MLflow with a local SQLite backend and local model artifacts for development. Cloud infrastructure such as PostgreSQL, object storage, and AWS ECS/Fargate deployment can be introduced as part of the production deployment stage.
 
 
-
+```
 breast-cancer-mlops/
 │
 ├── app/                                  # Production FastAPI application
@@ -194,9 +194,7 @@ breast-cancer-mlops/
 ├── requirements.txt                      # Python dependencies
 ├── README.md                             
 └── LICENSE                               
-
-
-
+```
 
 
 ---
