@@ -41,7 +41,7 @@ build/
 mlruns/
 
 # Project-specific files
-commands.txt
+command.txt
 command.sh
 bcmlops/
 app/mlartifacts/
