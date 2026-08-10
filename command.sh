@@ -276,11 +276,11 @@ LOG_LEVEL             →      log_level
 
 
 
+# ------------------------------- Monitoring grafana + prometheus -----------------------------
 
-       # ------------------------------- Monitoring grafana + prometheus -----------------------------
+PrompQL to see the metrics for the FastAPI service:
 
-
-
+{job="fastapi"} 
                                               
 
 
@@ -327,4 +327,50 @@ LOG_LEVEL             →      log_level
 
        http://localhost:9090/targets 
 
-       docker exec prometheus wget -qO- http://fastapi:8000/metrics
+       docker exec prometheus wget -qO- http://fastapi:8000/metrics 
+
+
+       # Grafana dashboard to see metrics
+
+
+# Recommended dashboard
+
+At this point, I'd structure your Grafana dashboard like this:
+
+
+┌────────────────────┬────────────────────┬────────────────────┐
+│ FastAPI Status     │ Total Predictions  │ Prediction Errors  │
+│       UP            │        12          │         0         │
+└────────────────────┴────────────────────┴────────────────────┘
+
+┌────────────────────┬────────────────────┬────────────────────┐
+│ Successful         │ Success Rate       │ Predictions / Min  │
+│ Predictions: 12    │       100%         │                    │
+└────────────────────┴────────────────────┴────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│                Prediction Requests / Minute                   │
+│                         📈                                    │
+└───────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────┬─────────────────────────────────┐
+│ Average Prediction Latency  │ P95 Prediction Latency         │
+│            ~54 ms           │                                 │
+└─────────────────────────────┴─────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│                    Prediction Latency                         │
+│                         📈                                    │
+└───────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────┬──────────────────────────────┐
+│ Predictions by Class            │ FastAPI Memory               │
+│                                │                              │
+│ malignant ████████████ 12      │          📈                  │
+│ benign                         │                              │
+└────────────────────────────────┴──────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│                       CPU Usage                               │
+│                         📈                                    │
+└───────────────────────────────────────────────────────────────┘

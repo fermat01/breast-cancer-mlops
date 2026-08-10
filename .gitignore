@@ -17,6 +17,7 @@ env/
 *.db
 *.sqlite3
 *.log
+mlflow.db
 
 # Python packaging
 *.egg-info/
