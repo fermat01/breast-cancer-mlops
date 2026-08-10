@@ -518,17 +518,29 @@ Please ensure your code adheres to project style and passes tests.
 This project implements an end-to-end MLOps workflow for a breast cancer classification model using the Wisconsin Breast Cancer dataset.
 
 **Data Pipeline** — load, validate, explore, preprocess, and split the dataset into training and test sets.
+
 **Model Training** — train a scikit-learn Random Forest classifier and evaluate its performance using classification metrics and visualizations.
+
 **MLflow** — track experiments, store model artifacts, register the trained model, and manage model versions through the MLflow Model Registry.
+
 **Model Serving** — load the registered MLflow model using the configured `champion` alias and keep it available in memory through the `ModelLoader` service.
- **FastAPI** — expose the machine learning model through a REST API with Pydantic request and response validation.
+
+**FastAPI** — expose the machine learning model through a REST API with Pydantic request and response validation.
+
 **API Endpoints** — provide dedicated endpoints for health checks, readiness, predictions, model information, and Prometheus metrics.
+
 **Testing** — implement unit tests for the prediction service and integration tests for the prediction API using pytest.
+
 **Observability** — expose Prometheus metrics for prediction request counts, successful predictions, errors, prediction latency, and predictions by class.
+
 **Grafana** — visualize application and prediction metrics collected by Prometheus through a monitoring dashboard.
- **Docker** — containerize the FastAPI application and supporting MLflow, Prometheus, and Grafana services using Docker Compose.
- **CI/CD** — use GitHub Actions to automate testing and the application build pipeline.
+
+**Docker** — containerize the FastAPI application and supporting MLflow, Prometheus, and Grafana services using Docker Compose.
+
+**CI/CD** — use GitHub Actions to automate testing and the application build pipeline.
+
 **Production Deployment** — prepare the containerized application for deployment on AWS ECS Fargate, with Amazon ECR used as the container registry.
+
 **Production Hardening** — continue improving configuration management, secrets management, logging, security, reliability, scalability, and performance for production deployment.
 
 Overall, the project demonstrates how a machine learning model can progress from data preparation and experimentation to model registration, API serving, automated testing, monitoring, containerization, and cloud deployment.
