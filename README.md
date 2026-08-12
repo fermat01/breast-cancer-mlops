@@ -206,25 +206,24 @@ breast-cancer-mlops/
 │       └── prometheus.yml
 │
 ├── mlflow/
-│   └── Dockerfile                        # MLflow server container
+│   └── Dockerfile                        # MLflow server  
 │
 ├── scripts/
-│   └── README.md                         # Operational script documentation
+│   └── docker_boostrap_model.sh
 │
 ├── .github/
 │   └── workflows/
 │       └── ci-cd.yml                     # CI/CD automation
 │
-├── Dockerfile                            # FastAPI application container
-├── docker-compose.yml                    # Local multi-service environment
-├── .dockerignore                         # Docker build exclusions
+├── Dockerfile                            # FastAPI application 
+├── docker-compose.yml                    
+├── .dockerignore                       
 │
-├── .env                                  # Local environment variables
-├── .env.dev                              # Development environment variables
-├── .env.example                          # Environment variable template
-├── .gitignore                            # Git exclusions
+├── .env                                
+├── .env.dev                              # Local environment variables                           
+├── .env.example                          
+├── .gitignore                            
 │
-├── commands.txt                          # Development/operational commands
 ├── pytest.ini                            # Pytest configuration
 ├── requirements.txt                      # Python dependencies
 ├── README.md                             
