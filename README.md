@@ -209,7 +209,7 @@ breast-cancer-mlops/
 │   └── Dockerfile                        # MLflow server  
 │
 ├── scripts/
-│   └── docker_boostrap_model.sh
+│   └── docker_boostrap_model.sh          # Automatically trains the model and assigns the alias if none exists
 │
 ├── .github/
 │   └── workflows/
