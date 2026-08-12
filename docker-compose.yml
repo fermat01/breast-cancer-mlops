@@ -1,4 +1,5 @@
 services:
+
   # ============================================================
   # PostgreSQL
   # ============================================================
@@ -19,13 +20,18 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
     networks:
       - mlops-network
+
 
   # ============================================================
   # MinIO
@@ -49,13 +55,18 @@ services:
       - minio-data:/data
 
     healthcheck:
-      test: ["CMD-SHELL", "mc ready local"]
+      test:
+        [
+          "CMD-SHELL",
+          "mc ready local"
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
     networks:
       - mlops-network
+
 
   # ============================================================
   # Create MLflow artifact bucket
@@ -80,6 +91,7 @@ services:
 
     networks:
       - mlops-network
+
 
   # ============================================================
   # MLflow Tracking Server
@@ -107,7 +119,7 @@ services:
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
 
     command: >
       mlflow server
@@ -122,7 +134,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:5000/version')",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/version')"
         ]
       interval: 10s
       timeout: 5s
@@ -131,6 +143,41 @@ services:
 
     networks:
       - mlops-network
+
+
+  # ============================================================
+  # Model Bootstrap
+  # ============================================================
+
+  model-bootstrap:
+    build:
+      context: .
+
+    container_name: breast-cancer-model-bootstrap
+
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
+      MODEL_NAME: ${MODEL_NAME}
+      MODEL_ALIAS: ${MODEL_ALIAS}
+
+    command:
+      [
+        "bash",
+        "scripts/docker_bootstrap_model.sh"
+      ]
+
+    networks:
+      - mlops-network
+
 
   # ============================================================
   # FastAPI
@@ -143,18 +190,20 @@ services:
     container_name: breast-cancer-api
 
     depends_on:
-      mlflow:
-        condition: service_healthy
+      model-bootstrap:
+        condition: service_completed_successfully
 
     ports:
       - "8001:8000"
+
     environment:
       APP_NAME: ${APP_NAME}
       APP_VERSION: ${APP_VERSION}
       ENVIRONMENT: ${ENVIRONMENT}
       DEBUG: ${DEBUG}
 
-      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI}
+      # Docker internal MLflow address
+      MLFLOW_TRACKING_URI: http://mlflow:5000
 
       MODEL_NAME: ${MODEL_NAME}
       MODEL_ALIAS: ${MODEL_ALIAS}
@@ -162,7 +211,8 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
-      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL}
+      # Docker internal MinIO address
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
 
       API_PREFIX: ${API_PREFIX}
       LOG_LEVEL: ${LOG_LEVEL}
@@ -173,7 +223,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
         ]
       interval: 10s
       timeout: 5s
@@ -182,6 +232,7 @@ services:
 
     networks:
       - mlops-network
+
 
   # ============================================================
   # Prometheus
@@ -196,6 +247,7 @@ services:
 
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
 
     depends_on:
       fastapi:
@@ -203,6 +255,7 @@ services:
 
     networks:
       - mlops-network
+
 
   # ============================================================
   # Grafana
@@ -229,16 +282,17 @@ services:
     networks:
       - mlops-network
 
+
 # ============================================================
 # Volumes
 # ============================================================
 
 volumes:
   postgres-data:
-
+  prometheus-data:
   minio-data:
-
   grafana-data:
+
 
 # ============================================================
 # Network
