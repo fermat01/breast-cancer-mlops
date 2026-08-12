@@ -10,45 +10,80 @@ This MLOps project provides an end-to-end workflow for building, evaluating, ser
 
 
                                                   
+                         ┌─────────────────┐
+                         │     Client      │
+                         └────────┬────────┘
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │    FastAPI      │
+                         │   API Runtime   │
+                         └────────┬────────┘
+                                  │
+             ┌────────────────────┼────────────────────┐
+             ▼                    ▼                    ▼
+         /health             /predictions            /model
+             │                    │                    │
+             │                    ▼                    │
+             │             ┌─────────────┐             │
+             │             │  Predictor  │             │
+             │             └──────┬──────┘             │
+             │                    │                    │
+             │                    ▼                    │
+             │             ┌─────────────┐             │
+             │             │ ModelLoader │             │
+             │             └──────┬──────┘             │
+             │                    │                    │
+             │                    ▼                    │
+             │             ┌─────────────┐             │
+             └────────────►│   MLflow    │◄────────────┘
+                           │  Registry   │
+                           └──────┬──────┘
+                                  │
+                    ┌─────────────┴─────────────┐
+                    ▼                           ▼
+             ┌──────────────┐            ┌──────────────┐
+             │ PostgreSQL   │            │    MinIO     │
+             │ Model/Run    │            │  Artifacts   │
+             │ Metadata     │            │              │
+             └──────────────┘            └──────────────┘
 
-                                                            ┌─────────────────┐
-                                                            │     Client      │
-                                                            └────────┬────────┘
-                                                                    │
-                                                                    ▼
-                                                            ┌─────────────────┐
-                                                            │    FastAPI      │
-                                                            └────────┬────────┘
-                                                                    │
-                                                ┌───────────────────┼───────────────────┐
-                                                ▼                   ▼                   ▼
-                                            /health            /predictions           /model
-                                                │                   │
-                                                │                   ▼
-                                                │             ┌─────────────┐
-                                                │             │  Predictor  │
-                                                │             └──────┬──────┘
-                                                │                    │
-                                                │                    ▼
-                                                │             ┌─────────────┐
-                                                │             │ ModelLoader │
-                                                │             └──────┬──────┘
-                                                │                    │
-                                                │                    ▼
-                                                │             ┌─────────────┐
-                                                │             │   MLflow    │
-                                                │             └──────┬──────┘
-                                                │                    │
-                                                │          ┌─────────┴─────────┐
-                                                │          ▼                   ▼
-                                                │     PostgreSQL             MinIO
-                                                │     Registry              Artifacts
-                                                │
-                                                ▼
-                                            Prometheus
-                                                │
-                                                ▼
-                                              Grafana
+
+        ┌──────────────────────────────────────────────┐
+        │              MODEL BOOTSTRAP                 │
+        │           Initialization / Setup             │
+        │                                              │
+        │  Check model alias assigned                  │
+        │        │                                     │
+        │        ├── exists ─────────► Done            │
+        │        │                                     │
+        │        └── missing                           │
+        │              │                               │
+        │              ▼                               │
+        │        Train model                           │
+        │              │                               │
+        │              ▼                               │
+        │        Register model                        │
+        │              │                               │
+        │              ▼                               │
+        │        Assign model alias                    │
+        │              │                               │
+        │              ▼                               │
+        │            Done                              │
+        └──────────────────────────────────────────────┘
+                              │
+                              ▼
+                         MLflow Registry
+
+
+             ┌───────────────────────────────┐
+             │          Monitoring           │
+             │                               │
+             │ FastAPI ──► Prometheus        │
+             │                  │            │
+             │                  ▼            │
+             │               Grafana         │
+             └───────────────────────────────┘
 
 
 ---
