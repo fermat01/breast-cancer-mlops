@@ -443,7 +443,7 @@ Prometheus scrapes the FastAPI `/api/v1/metrics` endpoint and collects applicati
 
 <br>
 
-![monitoring](images/grafana-fastapi-metrics.png)
+![monitoring](images/grafana_fastapi.png)
 
 <br>
 
