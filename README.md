@@ -248,6 +248,12 @@ breast-cancer-mlops/
 - **Configuration:** Environment-based application configuration using `.env` files and a dedicated `.env.example` template for reproducible development setup.
 - **Logging:** Structured application logging for API requests, model loading, predictions, errors, and MLflow model metadata.
 
+<br>
+
+  ![minio-model-artifact](images/minio_model_artifact.png)
+
+<br>
+
 ---
 ## Technology Stack
 
@@ -412,6 +418,10 @@ Prometheus metrics are exposed by FastAPI:
   curl http://localhost:8001/api/v1/metrics
   ```
 
+
+  
+
+
 ---
 
 ## API Endpoints
@@ -431,6 +441,13 @@ The application includes Prometheus metrics for monitoring the FastAPI predictio
 
 Prometheus scrapes the FastAPI `/api/v1/metrics` endpoint and collects application and prediction metrics. Grafana is connected to Prometheus to provide dashboards for API usage and model-serving performance.
 
+<br>
+
+![monitoring](images/grafana-fastapi-metrics.png)
+
+<br>
+
+
 ### Available Metrics
 
 The application exposes metrics including:
@@ -441,7 +458,13 @@ The application exposes metrics including:
 - `prediction_latency_seconds` — Histogram measuring prediction latency.
 - `predictions_by_class_total` — Number of predictions grouped by predicted class.
 - Python process metrics such as CPU and memory usage.
-- FastAPI service availability through the `up` metric.
+
+
+<br>
+
+![Available-metrics](images/grafana_all-metrics.png)
+
+<br>
 
 ### Monitoring Architecture
 
@@ -576,6 +599,11 @@ This project implements an end-to-end MLOps workflow for a breast cancer classif
 **Production Hardening** — continue improving configuration management, secrets management, logging, security, reliability, scalability, and performance for production deployment.
 
 Overall, the project demonstrates how a machine learning model can progress from data preparation and experimentation to model registration, API serving, automated testing, monitoring, containerization, and cloud deployment.
+
+
+
+
+
 
 ---
 
