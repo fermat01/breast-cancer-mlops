@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  DOCKER_IMAGE: codef2f/breast-cancer-classifier:latest
+  DOCKER_IMAGE: coder2f/breast-cancer-classifier:latest
 
 jobs:
 
