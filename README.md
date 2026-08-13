@@ -6,7 +6,7 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/fermat01/breast-cancer-mlops?style=flat)
 ![ViewCount](https://views.whatilearened.today/views/github/fermat01/breast-cancer-mlops.svg?cache=remove)
 
-This MLOps project provides an end-to-end workflow for building, evaluating, serving, and monitoring a machine learning model that classifies breast cancer using the Wisconsin Breast Cancer dataset. The model is trained using scikit-learn's Random Forest classifier, with data validation, preprocessing, model evaluation, and experiment tracking integrated into the training pipeline. MLflow is used to track experiments and manage the trained model, while a FastAPI application provides REST endpoints for health checks, model information, and breast cancer predictions. The prediction service loads the registered MLflow model through a dedicated model loader and returns both the predicted class and prediction probabilities. Prometheus is integrated to collect application and prediction metrics, with Grafana providing monitoring and visualization dashboards. The application is containerized with Docker and supported by automated testing and GitHub Actions-based CI/CD, providing a foundation for deployment to cloud infrastructure.
+This mlOps project provides an end-to-end workflow for building, evaluating, serving, and monitoring a machine learning model that classifies breast cancer using the Wisconsin Breast Cancer dataset. The model is trained using scikit-learn's Random Forest classifier, with data validation, preprocessing, model evaluation, and experiment tracking integrated into the training pipeline. MLflow is used to track experiments and manage the trained model, while a FastAPI application provides REST endpoints for health checks, model information, and breast cancer predictions. The prediction service loads the registered MLflow model through a dedicated model loader and returns both the predicted class and prediction probabilities. Prometheus is integrated to collect application and prediction metrics, with Grafana providing monitoring and visualization dashboards. The application is containerized with Docker and supported by automated testing and GitHub Actions-based CI/CD, providing a foundation for deployment to cloud infrastructure.
 
 
                                                   
@@ -501,7 +501,7 @@ The application exposes metrics including:
 
 The application is currently fully containerized and can be run locally using Docker Compose.
 
-The local MLOps stack includes:
+The local mlOps stack includes:
 
 - FastAPI prediction API
 - MLflow Tracking Server
