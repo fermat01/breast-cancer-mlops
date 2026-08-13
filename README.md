@@ -495,29 +495,41 @@ The application exposes metrics including:
   - Sensitive tokens and keys via GitHub Secrets and AWS Systems Manager Parameter Store or Secrets Manager.
 
 ---
-
 ## Deployment
 
-### Deploy on AWS ECS using Fargate
+### Current deployment status
 
-**Prerequisites:**
+The application is currently fully containerized and can be run locally using Docker Compose.
 
-- AWS CLI configured with appropriate IAM permissions.
-- Docker image pushed to Amazon ECR.
+The local MLOps stack includes:
 
-**Steps:**
+- FastAPI prediction API
+- MLflow Tracking Server
+- PostgreSQL
+- MinIO for MLflow artifacts
+- Automatic model bootstrap and model alias promotion
+- Prometheus
+- Grafana
+- Docker-based development environment
+- GitHub Actions CI/CD
+- Docker Hub image publishing
 
-1. Create an ECS cluster with Fargate launch type in the AWS Console or via CLI.
-2. Define a Task Definition specifying your container image, CPU, memory requirements, and port mappings (8000 for API, 8001 for metrics).
-3. Create a Service linked to the ECS cluster and Task Definition, configuring an Application Load Balancer to route traffic.
-4. Setup Auto Scaling policies based on CPU, memory, or request load.
-5. Use GitHub Actions to build, push the Docker image, and update ECS Services for seamless deployment.
+### Local deployment
+
+Start the complete MLOps stack:
+
+```bash
+docker compose up -d
+```
 
 ---
+
+
 
 ## Development
 
 ### Python Virtual Environment
+
 
 - Create and activate the project's Python virtual environment:
 

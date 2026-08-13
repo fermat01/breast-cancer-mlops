@@ -2,48 +2,77 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
 
 env:
-  DOCKER_IMAGE: coder2f/breast-cancer-mlapp:latest
-  EC2_HOST: ec2-instance-ip.amazonaws.com
-  EC2_USER: ec2-user
-  EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+  DOCKER_IMAGE: codef2f/breast-cancer-classifier:latest
 
 jobs:
-  build_push_deploy:
+
+  # ==========================================================
+  # CI - Tests
+  # ==========================================================
+
+  test:
+    name: Run tests
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Log in to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v3
-      with:
-        push: true
-        tags: ${{ env.DOCKER_IMAGE }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Install ssh client
-      run: sudo apt-get update && sudo apt-get install -y openssh-client
+      - name: Run tests
+        run: |
+          PYTHONPATH=. pytest tests -v
 
-    - name: Deploy on EC2
-      uses: appleboy/ssh-action@v0.1.7
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          docker pull $DOCKER_IMAGE
-          docker stop breast-cancer-mlapp || true
-          docker rm breast-cancer-mlapp || true
-          docker run -d -p 8000:80 -p 8001:8001 --name breast-cancer-mlapp $DOCKER_IMAGE
+
+  # ==========================================================
+  # CD - Build and Push Docker Image
+  # ==========================================================
+
+  build-and-push:
+    name: Build and push Docker image
+    needs: test
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
