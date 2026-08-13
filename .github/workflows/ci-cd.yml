@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  DOCKER_IMAGE: coder2f/breast-cancer-classifier:latest
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/breast-cancer-classifier
 
 jobs:
 
