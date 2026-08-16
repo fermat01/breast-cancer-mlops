@@ -9,12 +9,7 @@
 
 This mlOps project provides an end-to-end workflow for building, evaluating, serving, and monitoring a machine learning model that classifies breast cancer using the Wisconsin Breast Cancer dataset. The model is trained using scikit-learn's Random Forest classifier, with data validation, preprocessing, model evaluation, and experiment tracking integrated into the training pipeline. MLflow is used to track experiments and manage the trained model, while a FastAPI application provides REST endpoints for health checks, model information, and breast cancer predictions. The prediction service loads the registered MLflow model through a dedicated model loader and returns both the predicted class and prediction probabilities. Prometheus is integrated to collect application and prediction metrics, with Grafana providing monitoring and visualization dashboards. The application is containerized with Docker and supported by automated testing and GitHub Actions-based CI/CD, providing a foundation for deployment to cloud infrastructure.
 
-
-
-  ![mlflow-model-version](images/mlflow2.png)
-
-  
-   ### Achitecture
+ ### Achitecture
 
                                                   
                          ┌─────────────────┐
@@ -121,6 +116,13 @@ The machine learning model is built with scikit-learn using a Random Forest clas
 For observability, the application exposes Prometheus metrics covering prediction requests, successful predictions, prediction errors, prediction latency, and predictions by class. Grafana is used to visualize these metrics through monitoring dashboards. The application is containerized with Docker, while automated unit and integration tests provide validation of the prediction service and API. GitHub Actions is used for CI/CD automation, providing the foundation for future cloud deployment.
 
 The current architecture uses MLflow with a local SQLite backend and local model artifacts for development. Cloud infrastructure such as PostgreSQL, object storage, and AWS ECS/Fargate deployment can be introduced as part of the production deployment stage.
+
+  <br> 
+
+
+  ![mlflow-model-version](images/mlflow2.png)
+
+  <br> 
 
 
 ```
