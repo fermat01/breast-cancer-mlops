@@ -1,6 +1,7 @@
 # breast-cancer-mlops
 
 ![GitHub](https://img.shields.io/github/license/fermat01/breast-cancer-mlops?style=flat)
+[![Made with MLflow](https://img.shields.io/badge/Made%20with-mlflow-ff5d01.svg?logo=mlflow)](https://mlflow.org/)
 ![GitHub top language](https://img.shields.io/github/languages/top/fermat01/breast-cancer-mlops?style=flat)
 ![GitHub language count](https://img.shields.io/github/languages/count/fermat01/breast-cancer-mlops?style=flat)
 ![GitHub last commit](https://img.shields.io/github/last-commit/fermat01/breast-cancer-mlops?style=flat)
@@ -256,6 +257,25 @@ breast-cancer-mlops/
 
 ---
 ## Technology Stack
+
+
+**ML & Experiment Tracking**
+
+[![MLflow](https://img.shields.io/badge/MLflow-0194E2.svg?logo=mlflow&logoColor=white)](https://mlflow.org/)
+
+**Infrastructure & Storage**
+
+[![Docker](https://img.shields.io/badge/Docker-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![MinIO](https://img.shields.io/badge/MinIO-C72E49.svg?logo=minio&logoColor=white)](https://min.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
+**Monitoring**
+
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C.svg?logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800.svg?logo=grafana&logoColor=white)](https://grafana.com/)
+
+
+
 
 | Component              | Technology / Library                                      |
 | ---------------------- | --------------------------------------------------------- |
