@@ -9,86 +9,15 @@
 
 This mlOps project provides an end-to-end workflow for building, evaluating, serving, and monitoring a machine learning model that classifies breast cancer using the Wisconsin Breast Cancer dataset. The model is trained using scikit-learn's Random Forest classifier, with data validation, preprocessing, model evaluation, and experiment tracking integrated into the training pipeline. MLflow is used to track experiments and manage the trained model, while a FastAPI application provides REST endpoints for health checks, model information, and breast cancer predictions. The prediction service loads the registered MLflow model through a dedicated model loader and returns both the predicted class and prediction probabilities. Prometheus is integrated to collect application and prediction metrics, with Grafana providing monitoring and visualization dashboards. The application is containerized with Docker and supported by automated testing and GitHub Actions-based CI/CD, providing a foundation for deployment to cloud infrastructure.
 
- ### Achitecture
-
-                                                  
-                         ┌─────────────────┐
-                         │     Client      │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │    FastAPI      │
-                         │   API Runtime   │
-                         └────────┬────────┘
-                                  │
-             ┌────────────────────┼────────────────────┐
-             ▼                    ▼                    ▼
-         /health             /predictions            /model
-             │                    │                    │
-             │                    ▼                    │
-             │             ┌─────────────┐             │
-             │             │  Predictor  │             │
-             │             └──────┬──────┘             │
-             │                    │                    │
-             │                    ▼                    │
-             │             ┌─────────────┐             │
-             │             │ ModelLoader │             │
-             │             └──────┬──────┘             │
-             │                    │                    │
-             │                    ▼                    │
-             │             ┌─────────────┐             │
-             └────────────►│   MLflow    │◄────────────┘
-                           │  Registry   │
-                           └──────┬──────┘
-                                  │
-                    ┌─────────────┴─────────────┐
-                    ▼                           ▼
-             ┌──────────────┐            ┌──────────────┐
-             │ PostgreSQL   │            │    MinIO     │
-             │ Model/Run    │            │  Artifacts   │
-             │ Metadata     │            │              │
-             └──────────────┘            └──────────────┘
+           
+  <br> 
 
 
-        ┌──────────────────────────────────────────────┐
-        │              MODEL BOOTSTRAP                 │
-        │           Initialization / Setup             │
-        │                                              │
-        │  Check model alias assigned                  │
-        │        │                                     │
-        │        ├── exists ─────────► Done            │
-        │        │                                     │
-        │        └── missing                           │
-        │              │                               │
-        │              ▼                               │
-        │        Train model                           │
-        │              │                               │
-        │              ▼                               │
-        │        Register model                        │
-        │              │                               │
-        │              ▼                               │
-        │        Assign model alias                    │
-        │              │                               │
-        │              ▼                               │
-        │            Done                              │
-        └──────────────────────────────────────────────┘
-                              │
-                              ▼
-                         MLflow Registry
+  ![mlflow-model-version](images/bcmlOps_architecture.png)
+
+  <br> 
 
 
-             ┌───────────────────────────────┐
-             │          Monitoring           │
-             │                               │
-             │ FastAPI ──► Prometheus        │
-             │                  │            │
-             │                  ▼            │
-             │               Grafana         │
-             └───────────────────────────────┘
-
-
----
 
 ## Table of Contents
 
