@@ -426,18 +426,13 @@ The application exposes metrics including:
 ### Monitoring Architecture
 
 
-      FastAPI
-        │
-        │ /api/v1/metrics
-        ▼
-      Prometheus
-        │
-        │ PromQL
-        ▼
-      Grafana
-        │
-        ▼
-      Monitoring Dashboards
+           
+  <br> 
+
+
+  ![mlflow-model-version](images/monitoring.png)
+
+  <br> 
 
 ---
 
