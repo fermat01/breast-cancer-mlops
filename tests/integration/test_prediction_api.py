@@ -58,7 +58,7 @@ VALID_FEATURES = [
 # ============================================================
 
 
-@patch("app.api.routes.prediction.predict")
+@patch("app.api.v1.endpoints.prediction.predict")
 def test_create_prediction_success(
     mock_predict,
 ):
@@ -170,7 +170,7 @@ def test_create_prediction_invalid_feature_type():
     Test that the API rejects non-numerical features.
     """
 
-    invalid_features = VALID_FEATURES.copy()
+    invalid_features: list[float | str] = [*VALID_FEATURES]
 
     invalid_features[0] = "invalid"
 
@@ -193,7 +193,7 @@ def test_create_prediction_invalid_feature_type():
 # ============================================================
 
 
-@patch("app.api.routes.prediction.predict")
+@patch("app.api.v1.endpoints.prediction.predict")
 def test_create_prediction_model_unavailable(
     mock_predict,
 ):
@@ -222,7 +222,7 @@ def test_create_prediction_model_unavailable(
 # ============================================================
 
 
-@patch("app.api.routes.prediction.predict")
+@patch("app.api.v1.endpoints.prediction.predict")
 def test_create_prediction_unexpected_error(
     mock_predict,
 ):
@@ -244,5 +244,78 @@ def test_create_prediction_unexpected_error(
     data = response.json()
 
     assert data["detail"] == (
-        "An unexpected error occurred while generating " "the prediction."
+        "An unexpected error occurred while generating the prediction."
     )
+
+
+# ============================================================
+# Input validation monitoring
+# ============================================================
+
+
+@patch("app.api.main.INVALID_INPUTS_TOTAL")
+def test_invalid_feature_count_records_metric(
+    mock_invalid_inputs,
+):
+    """
+    Test that an invalid feature count is recorded
+    as an input-quality metric.
+    """
+
+    response = client.post(
+        "/api/v1/predictions",
+        json={
+            "features": VALID_FEATURES[:29],
+        },
+    )
+
+    assert response.status_code == 422
+
+    mock_invalid_inputs.labels.assert_called_once_with(reason="feature_count")
+    mock_invalid_inputs.labels.return_value.inc.assert_called_once_with()
+
+
+@patch("app.api.main.INVALID_INPUTS_TOTAL")
+def test_invalid_feature_type_records_metric(
+    mock_invalid_inputs,
+):
+    """
+    Test that a non-numerical feature is recorded
+    as an invalid-type input metric.
+    """
+
+    invalid_features: list[float | str] = [*VALID_FEATURES]
+
+    invalid_features[0] = "invalid"
+
+    response = client.post(
+        "/api/v1/predictions",
+        json={
+            "features": invalid_features,
+        },
+    )
+
+    assert response.status_code == 422
+
+    mock_invalid_inputs.labels.assert_called_once_with(reason="invalid_type")
+    mock_invalid_inputs.labels.return_value.inc.assert_called_once_with()
+
+
+@patch("app.api.main.INVALID_INPUTS_TOTAL")
+def test_missing_features_records_metric(
+    mock_invalid_inputs,
+):
+    """
+    Test that a missing features field is recorded
+    as a missing-field input metric.
+    """
+
+    response = client.post(
+        "/api/v1/predictions",
+        json={},
+    )
+
+    assert response.status_code == 422
+
+    mock_invalid_inputs.labels.assert_called_once_with(reason="missing_field")
+    mock_invalid_inputs.labels.return_value.inc.assert_called_once_with()

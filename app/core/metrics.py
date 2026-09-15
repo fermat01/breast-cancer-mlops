@@ -62,6 +62,32 @@ PREDICTIONS_BY_CLASS = Counter(
 
 
 # ============================================================
+# Prediction confidence
+# ============================================================
+
+PREDICTION_CONFIDENCE = Histogram(
+    "prediction_confidence",
+    "Confidence score of generated predictions.",
+    buckets=(
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.99,
+        1.0,
+    ),
+)
+
+
+LOW_CONFIDENCE_PREDICTIONS_TOTAL = Counter(
+    "low_confidence_predictions_total",
+    "Total number of predictions below the configured confidence threshold.",
+)
+
+
+# ============================================================
 # Model information
 # ============================================================
 
@@ -73,4 +99,15 @@ MODEL_INFO = Gauge(
         "model_alias",
         "model_version",
     ],
+)
+
+
+# ============================================================
+# Input data quality
+# ============================================================
+
+INVALID_INPUTS_TOTAL = Counter(
+    "invalid_inputs_total",
+    "Total number of invalid prediction inputs.",
+    ["reason"],
 )

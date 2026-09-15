@@ -32,10 +32,10 @@ import os
 from pathlib import Path
 from typing import Any
 
-import mlflow
 import mlflow.sklearn
-
 from mlflow.tracking import MlflowClient
+
+import mlflow
 
 # ============================================================
 # Configuration
@@ -205,7 +205,6 @@ def log_model(
     # --------------------------------------------------------
 
     if model_version is not None:
-
         client.set_model_version_tag(
             name=MODEL_NAME,
             version=model_version,
@@ -277,7 +276,6 @@ def get_model_metadata(
     metadata: dict[str, Any] = {}
 
     for key, value in model_version.tags.items():
-
         try:
             metadata[key] = json.loads(value)
 

@@ -12,14 +12,15 @@ Responsibilities:
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 
-from app.api.routes import health
-from app.api.routes import metrics
-from app.api.routes import model
-from app.api.routes import prediction
+from app.api.v1.endpoints import metrics
+from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
+from app.core.metrics import INVALID_INPUTS_TOTAL
 from app.services.model_loader import load_model
 
 # ============================================================
@@ -76,27 +77,75 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description=("Breast Cancer Classification API " "powered by MLflow."),
+    description="Breast Cancer Classification API powered by MLflow.",
     lifespan=lifespan,
 )
 
 
 # ============================================================
-# API routes
+# Request validation monitoring
+# ============================================================
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+):
+    """
+    Record invalid prediction requests while preserving
+    FastAPI's standard validation error response.
+    """
+
+    reason = "other"
+
+    for error in exc.errors():
+        location = error.get("loc", ())
+        error_type = error.get("type", "")
+
+        if "features" not in location:
+            continue
+
+        if error_type == "missing":
+            reason = "missing_field"
+            break
+
+        if error_type in {
+            "too_short",
+            "too_long",
+        }:
+            reason = "feature_count"
+            break
+
+        if (
+            "parsing" in error_type
+            or "type" in error_type
+            or error_type.startswith("float_")
+        ):
+            reason = "invalid_type"
+            break
+
+    if request.url.path == f"{settings.api_prefix}/predictions":
+        INVALID_INPUTS_TOTAL.labels(reason=reason).inc()
+
+        logger.warning(
+            "Invalid prediction input: path=%s reason=%s",
+            request.url.path,
+            reason,
+        )
+
+    return await request_validation_exception_handler(
+        request,
+        exc,
+    )
+
+
+# ============================================================
+# Versioned API routes
 # ============================================================
 
 app.include_router(
-    health.router,
-    prefix=settings.api_prefix,
-)
-
-app.include_router(
-    prediction.router,
-    prefix=settings.api_prefix,
-)
-
-app.include_router(
-    model.router,
+    api_router,
     prefix=settings.api_prefix,
 )
 

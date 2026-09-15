@@ -1,0 +1,54 @@
+[project]
+name = "breast-cancer-mlops"
+version = "0.1.0"
+description = "Production-oriented MLOps platform for reproducible model training, registry, serving, and monitoring."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "boto3",
+    "fastapi==0.141.1",
+    "httpx2>=2.13.0",
+    "joblib",
+    "mlflow",
+    "numpy",
+    "pandas",
+    "prometheus-client",
+    "psycopg2-binary",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "scikit-learn",
+    "uvicorn[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==9.1.1",
+    "pytest-cov==7.0.0",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore:The anyio\\.abc\\.BlockingPortal alias is deprecated.*:DeprecationWarning:starlette\\.testclient",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

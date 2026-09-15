@@ -30,37 +30,26 @@ Model Registry
 import logging
 from pathlib import Path
 
-
 from training.data_loader import load_dataset
-
-from training.validate import validate_dataset
-
-from training.split import split_dataset
-
-
-from training.preprocess import (
-    create_preprocessing_pipeline,
+from training.evaluate import (
+    evaluate_model,
 )
-
-
+from training.mlflow_tracker import (
+    log_directory,
+    log_metrics,
+    log_model,
+    log_parameters,
+    start_run,
+)
 from training.model import (
     build_model,
     train_model,
 )
-
-
-from training.evaluate import (
-    evaluate_model,
+from training.preprocess import (
+    create_preprocessing_pipeline,
 )
-
-
-from training.mlflow_tracker import (
-    start_run,
-    log_parameters,
-    log_metrics,
-    log_directory,
-    log_model,
-)
+from training.split import split_dataset
+from training.validate import validate_dataset
 
 # ============================================================
 # Logging configuration
@@ -93,7 +82,6 @@ def run_training_pipeline():
     # =====================================================
 
     with start_run(run_name="RandomForest") as run:
-
         # =================================================
         # MLflow Run ID
         # =================================================
@@ -119,7 +107,6 @@ def run_training_pipeline():
         validation = validate_dataset(dataset)
 
         if not validation.is_valid:
-
             raise ValueError(validation.errors)
 
         logger.info("Dataset validation successful")
@@ -223,7 +210,6 @@ def run_training_pipeline():
         reports_dir = Path("reports") / "evaluation"
 
         if reports_dir.exists():
-
             logger.info("Logging evaluation artifacts")
 
             log_directory(reports_dir)
@@ -242,7 +228,6 @@ def run_training_pipeline():
 
 
 if __name__ == "__main__":
-
     model, metrics = run_training_pipeline()
 
     print("\n")
@@ -254,5 +239,4 @@ if __name__ == "__main__":
     print("=" * 60)
 
     for metric_name, metric_value in metrics.items():
-
         print(f"{metric_name:<15}: {metric_value:.4f}")

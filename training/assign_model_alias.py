@@ -18,7 +18,6 @@ MODEL_VERSION = 1
 
 
 if __name__ == "__main__":
-
     result = set_model_alias(
         version=MODEL_VERSION,
         alias="champion",
@@ -27,6 +26,3 @@ if __name__ == "__main__":
     print("Model alias assigned successfully:")
 
     print(result)
-
-
-
