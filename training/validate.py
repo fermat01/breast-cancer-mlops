@@ -19,8 +19,6 @@ It should NOT:
 
 from dataclasses import dataclass
 
-import pandas as pd
-
 from training.data_loader import Dataset
 
 
@@ -112,7 +110,6 @@ def validate_dataset(
 
 
 if __name__ == "__main__":
-
     from training.data_loader import load_dataset
 
     dataset = load_dataset()
@@ -133,7 +130,6 @@ if __name__ == "__main__":
     if result.warnings:
         print("\nWarnings:")
         for warning in result.warnings:
-
             print(f"- {warning}")
 
             print(f"- {warning}")

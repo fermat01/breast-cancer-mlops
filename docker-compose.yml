@@ -1,5 +1,4 @@
 services:
-
   # ============================================================
   # PostgreSQL
   # ============================================================
@@ -13,18 +12,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
 
-    ports:
-      - "5432:5432"
-
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,13 +24,12 @@ services:
     networks:
       - mlops-network
 
-
   # ============================================================
   # MinIO
   # ============================================================
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: mlflow-minio
 
     command: server /data --console-address ":9001"
@@ -55,11 +46,7 @@ services:
       - minio-data:/data
 
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mc ready local"
-        ]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -67,31 +54,31 @@ services:
     networks:
       - mlops-network
 
-
   # ============================================================
   # Create MLflow artifact bucket
   # ============================================================
 
   minio-create-bucket:
-    image: minio/mc:latest
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: minio-init
 
     depends_on:
       minio:
         condition: service_healthy
 
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set minio http://minio:9000
-      ${MINIO_ROOT_USER}
-      ${MINIO_ROOT_PASSWORD};
-      mc mb --ignore-existing minio/mlflow-artifacts;
-      exit 0;
-      "
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set minio http://minio:9000 "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing minio/mlflow-artifacts
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
 
     networks:
       - mlops-network
-
 
   # ============================================================
   # MLflow Tracking Server
@@ -134,7 +121,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:5000/version')"
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/version')",
         ]
       interval: 10s
       timeout: 5s
@@ -143,7 +130,6 @@ services:
 
     networks:
       - mlops-network
-
 
   # ============================================================
   # Model Bootstrap
@@ -169,15 +155,10 @@ services:
       MODEL_NAME: ${MODEL_NAME}
       MODEL_ALIAS: ${MODEL_ALIAS}
 
-    command:
-      [
-        "bash",
-        "scripts/docker_bootstrap_model.sh"
-      ]
+    command: ["bash", "scripts/docker_bootstrap_model.sh"]
 
     networks:
       - mlops-network
-
 
   # ============================================================
   # FastAPI
@@ -223,7 +204,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')",
         ]
       interval: 10s
       timeout: 5s
@@ -232,7 +213,6 @@ services:
 
     networks:
       - mlops-network
-
 
   # ============================================================
   # Prometheus
@@ -256,7 +236,6 @@ services:
     networks:
       - mlops-network
 
-
   # ============================================================
   # Grafana
   # ============================================================
@@ -277,11 +256,17 @@ services:
         condition: service_started
 
     volumes:
+      # Persistent Grafana state
       - grafana-data:/var/lib/grafana
+      # Provision Prometheus automatically
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      # Provision dashboards automatically
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      # Dashboard definitions
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
     networks:
       - mlops-network
-
 
 # ============================================================
 # Volumes
@@ -292,7 +277,6 @@ volumes:
   prometheus-data:
   minio-data:
   grafana-data:
-
 
 # ============================================================
 # Network

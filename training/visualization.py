@@ -16,17 +16,13 @@ This module does NOT:
 
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-
 import matplotlib.pyplot as plt
-
-
+import pandas as pd
 from sklearn.metrics import (
     accuracy_score,
+    auc,
     confusion_matrix,
     roc_curve,
-    auc,
 )
 
 # ============================================================
@@ -78,9 +74,7 @@ def plot_confusion_matrix(
     plt.yticks([0, 1], labels)
 
     for i in range(2):
-
         for j in range(2):
-
             plt.text(
                 j,
                 i,
@@ -203,7 +197,6 @@ def plot_tree_accuracy_curve(
     """
 
     from sklearn.ensemble import RandomForestClassifier
-
     from sklearn.pipeline import Pipeline
 
     tree_numbers = [
@@ -220,7 +213,6 @@ def plot_tree_accuracy_curve(
     test_scores = []
 
     for trees in tree_numbers:
-
         pipeline = Pipeline(
             [
                 (

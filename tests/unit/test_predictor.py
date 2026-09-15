@@ -263,3 +263,62 @@ def test_predict_returns_model_metadata(
     assert result["model_alias"] == "champion"
     assert result["model_version"] == "1"
     assert result["model_run_id"] == "test-run-id"
+
+
+# ============================================================
+# Prediction confidence metrics
+# ============================================================
+
+
+@patch("app.services.predictor.PREDICTION_CONFIDENCE")
+@patch("app.services.predictor.LOW_CONFIDENCE_PREDICTIONS_TOTAL")
+@patch("app.services.predictor.get_model_metadata")
+@patch("app.services.predictor.get_model")
+def test_predict_records_prediction_confidence(
+    mock_get_model,
+    mock_get_model_metadata,
+    mock_low_confidence_predictions,
+    mock_prediction_confidence,
+):
+    """
+    Test that the confidence of the predicted class
+    is recorded as a Prometheus metric.
+    """
+
+    mock_get_model.return_value = create_mock_model()
+    mock_get_model_metadata.return_value = create_mock_metadata()
+
+    predict(VALID_FEATURES)
+
+    mock_prediction_confidence.observe.assert_called_once_with(0.97)
+    mock_low_confidence_predictions.inc.assert_not_called()
+
+
+@patch("app.services.predictor.PREDICTION_CONFIDENCE")
+@patch("app.services.predictor.LOW_CONFIDENCE_PREDICTIONS_TOTAL")
+@patch("app.services.predictor.get_model_metadata")
+@patch("app.services.predictor.get_model")
+def test_predict_records_low_confidence_prediction(
+    mock_get_model,
+    mock_get_model_metadata,
+    mock_low_confidence_predictions,
+    mock_prediction_confidence,
+):
+    """
+    Test that predictions below the confidence threshold
+    increment the low-confidence Prometheus counter.
+    """
+
+    mock_model = create_mock_model()
+
+    mock_model._model_impl.sklearn_model.predict_proba.return_value = np.array(
+        [[0.65, 0.35]]
+    )
+
+    mock_get_model.return_value = mock_model
+    mock_get_model_metadata.return_value = create_mock_metadata()
+
+    predict(VALID_FEATURES)
+
+    mock_prediction_confidence.observe.assert_called_once_with(0.65)
+    mock_low_confidence_predictions.inc.assert_called_once_with()

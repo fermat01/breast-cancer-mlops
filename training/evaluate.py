@@ -19,24 +19,21 @@ This module does NOT:
 
 from pathlib import Path
 
-
 import pandas as pd
-
-
 from sklearn.metrics import (
     accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     classification_report,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
 
 from training.visualization import (
     plot_confusion_matrix,
-    plot_roc_curve,
     plot_feature_importance,
+    plot_roc_curve,
     plot_tree_accuracy_curve,
 )
 
@@ -76,7 +73,6 @@ def calculate_metrics(
     }
 
     if y_probability is not None:
-
         metrics["roc_auc"] = roc_auc_score(y_true, y_probability)
 
     return metrics
@@ -172,7 +168,6 @@ def evaluate_model(
     y_probability = None
 
     if hasattr(model, "predict_proba"):
-
         y_probability = model.predict_proba(X_test)[:, 1]
 
     # ----------------------------------------
@@ -222,7 +217,6 @@ def evaluate_model(
     )
 
     if y_probability is not None:
-
         plot_roc_curve(
             y_test,
             y_probability,

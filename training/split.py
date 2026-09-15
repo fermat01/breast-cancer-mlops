@@ -45,7 +45,6 @@ def split_dataset(
 
 
 if __name__ == "__main__":
-
     from training.data_loader import load_dataset
 
     dataset = load_dataset()

@@ -34,13 +34,9 @@ def create_prediction(
     """
 
     try:
-        result = predict(
-            request.features
-        )
+        result = predict(request.features)
 
-        return PredictionResponse(
-            **result
-        )
+        return PredictionResponse(**result)
 
     # --------------------------------------------------------
     # Invalid prediction input
@@ -77,12 +73,9 @@ def create_prediction(
     # --------------------------------------------------------
 
     except Exception as exc:
-        logger.exception(
-            "Unexpected prediction error."
-        )
+        logger.exception("Unexpected prediction error.")
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while generating the prediction.",
         ) from exc
-

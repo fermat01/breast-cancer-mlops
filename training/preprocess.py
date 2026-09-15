@@ -122,7 +122,6 @@ def validate_pipeline(pipeline: Pipeline) -> bool:
 
 
 if __name__ == "__main__":
-
     pipeline = create_preprocessing_pipeline()
 
     validate_pipeline(pipeline)

@@ -17,7 +17,6 @@ FEATURE_NAMES = [
     "mean concave points",
     "mean symmetry",
     "mean fractal dimension",
-
     # Standard error features
     "radius error",
     "texture error",
@@ -29,7 +28,6 @@ FEATURE_NAMES = [
     "concave points error",
     "symmetry error",
     "fractal dimension error",
-
     # Worst features
     "worst radius",
     "worst texture",

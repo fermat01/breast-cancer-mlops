@@ -23,12 +23,7 @@ def configure_logging() -> None:
 
     logging.basicConfig(
         level=log_level,
-        format=(
-            "%(asctime)s | "
-            "%(levelname)s | "
-            "%(name)s | "
-            "%(message)s"
-        ),
+        format=("%(asctime)s | %(levelname)s | %(name)s | %(message)s"),
         handlers=[
             logging.StreamHandler(sys.stdout),
         ],

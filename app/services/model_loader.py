@@ -9,6 +9,7 @@ Responsibilities:
 - Resolve the configured MLflow model alias
 - Expose model metadata/version
 - Provide model loading status
+- Expose loaded model information to Prometheus
 
 Credentials are never hard-coded here.
 They are loaded from application settings and configured
@@ -19,11 +20,12 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-import mlflow
 from mlflow.tracking import MlflowClient
 
+import mlflow
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.metrics import MODEL_INFO
 
 logger = get_logger(__name__)
 
@@ -81,22 +83,16 @@ def configure_artifact_storage() -> None:
         os.environ["AWS_ACCESS_KEY_ID"] = settings.aws_access_key_id
 
     if settings.aws_secret_access_key:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = (
-            settings.aws_secret_access_key
-        )
+        os.environ["AWS_SECRET_ACCESS_KEY"] = settings.aws_secret_access_key
 
     # --------------------------------------------------------
     # S3-compatible endpoint
     # --------------------------------------------------------
 
     if settings.mlflow_s3_endpoint_url:
-        os.environ["MLFLOW_S3_ENDPOINT_URL"] = (
-            settings.mlflow_s3_endpoint_url
-        )
+        os.environ["MLFLOW_S3_ENDPOINT_URL"] = settings.mlflow_s3_endpoint_url
 
-    logger.info(
-        "MLflow artifact storage configured."
-    )
+    logger.info("MLflow artifact storage configured.")
 
     if settings.mlflow_s3_endpoint_url:
         logger.info(
@@ -174,15 +170,13 @@ def load_model() -> Any:
 
     except Exception as exc:
         logger.exception(
-            "Unable to resolve MLflow model alias: "
-            "model=%s alias=%s",
+            "Unable to resolve MLflow model alias: model=%s alias=%s",
             model_name,
             model_alias,
         )
 
         raise RuntimeError(
-            f"Unable to resolve MLflow model "
-            f"'{model_name}@{model_alias}'."
+            f"Unable to resolve MLflow model '{model_name}@{model_alias}'."
         ) from exc
 
     # --------------------------------------------------------
@@ -192,8 +186,7 @@ def load_model() -> Any:
     version = str(model_version.version)
 
     logger.info(
-        "Resolved MLflow model: "
-        "model=%s alias=%s version=%s",
+        "Resolved MLflow model: model=%s alias=%s version=%s",
         model_name,
         model_alias,
         version,
@@ -215,8 +208,7 @@ def load_model() -> Any:
         )
 
         raise RuntimeError(
-            f"Unable to load MLflow model "
-            f"'{settings.model_uri}'."
+            f"Unable to load MLflow model '{settings.model_uri}'."
         ) from exc
 
     # --------------------------------------------------------
@@ -237,9 +229,18 @@ def load_model() -> Any:
         source=model_version.source,
     )
 
+    # --------------------------------------------------------
+    # Expose loaded model metadata to Prometheus
+    # --------------------------------------------------------
+
+    MODEL_INFO.labels(
+        model_name=model_name,
+        model_alias=model_alias,
+        model_version=version,
+    ).set(1)
+
     logger.info(
-        "MLflow model loaded successfully: "
-        "model=%s alias=%s version=%s run_id=%s",
+        "MLflow model loaded successfully: model=%s alias=%s version=%s run_id=%s",
         model_name,
         model_alias,
         version,
@@ -265,9 +266,7 @@ def get_model() -> Any:
     """
 
     if _model is None:
-        raise RuntimeError(
-            "ML model has not been loaded."
-        )
+        raise RuntimeError("ML model has not been loaded.")
 
     return _model
 
@@ -301,9 +300,6 @@ def get_model_metadata() -> ModelMetadata:
     """
 
     if _model_metadata is None:
-        raise RuntimeError(
-            "ML model metadata is not available."
-        )
+        raise RuntimeError("ML model metadata is not available.")
 
     return _model_metadata
-

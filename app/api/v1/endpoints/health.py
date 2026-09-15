@@ -3,6 +3,7 @@ Health and readiness endpoints.
 """
 
 from fastapi import APIRouter, HTTPException, status
+
 from app.core.config import get_settings
 from app.schemas.health import (
     HealthResponse,
@@ -46,7 +47,6 @@ def readiness_check():
     model_loaded = is_model_loaded()
 
     if not model_loaded:
-
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="ML model is not loaded.",

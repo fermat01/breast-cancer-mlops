@@ -17,10 +17,11 @@ from typing import Any
 
 import pandas as pd
 
-from app.core.config import get_settings
 from app.core.features import CLASS_LABELS, FEATURE_NAMES
 from app.core.logging import get_logger
 from app.core.metrics import (
+    LOW_CONFIDENCE_PREDICTIONS_TOTAL,
+    PREDICTION_CONFIDENCE,
     PREDICTION_ERRORS_TOTAL,
     PREDICTION_LATENCY_SECONDS,
     PREDICTION_REQUESTS_TOTAL,
@@ -33,6 +34,8 @@ from app.services.model_loader import (
 )
 
 logger = get_logger(__name__)
+
+LOW_CONFIDENCE_THRESHOLD = 0.70
 
 
 def predict(features: list[float]) -> dict[str, Any]:
@@ -64,8 +67,6 @@ def predict(features: list[float]) -> dict[str, Any]:
     PREDICTION_REQUESTS_TOTAL.inc()
 
     try:
-        settings = get_settings()
-
         # ========================================================
         # Validate feature count
         # ========================================================
@@ -173,6 +174,7 @@ def predict(features: list[float]) -> dict[str, Any]:
                     for class_label, probability in zip(
                         classes,
                         proba,
+                        strict=True,
                     )
                 }
 
@@ -180,6 +182,24 @@ def predict(features: list[float]) -> dict[str, Any]:
                     "Prediction probabilities: %s",
                     probabilities,
                 )
+
+                # ====================================================
+                # Record prediction confidence metrics
+                # ====================================================
+
+                prediction_confidence = probabilities.get(prediction_label)
+
+                if prediction_confidence is not None:
+                    PREDICTION_CONFIDENCE.observe(prediction_confidence)
+
+                    if prediction_confidence < LOW_CONFIDENCE_THRESHOLD:
+                        LOW_CONFIDENCE_PREDICTIONS_TOTAL.inc()
+
+                    logger.debug(
+                        "Prediction confidence: %.4f threshold=%.2f",
+                        prediction_confidence,
+                        LOW_CONFIDENCE_THRESHOLD,
+                    )
 
             else:
                 logger.warning("Loaded model does not expose predict_proba().")

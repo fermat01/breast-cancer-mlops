@@ -102,8 +102,7 @@ class PredictionResponse(BaseModel):
     prediction_label: str = Field(
         ...,
         description=(
-            "Human-readable prediction label. "
-            "Currently either 'malignant' or 'benign'."
+            "Human-readable prediction label. Currently either 'malignant' or 'benign'."
         ),
         examples=["malignant"],
     )
