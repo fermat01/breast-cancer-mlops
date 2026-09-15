@@ -793,24 +793,33 @@ uv run pytest -q
 
 ## CI/CD Pipeline
 
-GitHub Actions provides automated CI/CD workflow support for the
-repository.
+## CI/CD Pipeline
 
-The workflow is intended to validate changes automatically before
-integration and provides the foundation for container-image publishing
-and deployment automation.
+The project uses **GitHub Actions** for Continuous Integration and Continuous Delivery.
 
-The exact deployment behavior is defined in:
+The pipeline automatically:
 
-``` text
-.github/workflows/ci-cd.yml
+- Sets up **Python 3.12** and **uv**
+- Runs **Ruff** linting and formatting checks
+- Runs the **pytest** test suite
+- Validates the Docker image build
+- Publishes Docker images to **GitHub Container Registry (GHCR)** on pushes to `main`
+
+```text
+Pull Request / Push
+        ↓
+uv → Ruff → pytest
+        ↓
+Docker Build
+        ↓
+Push to main
+        ↓
+GHCR (:latest + :sha-<commit>)
 ```
 
-Local development and testing do not require cloud infrastructure.
+The workflow is defined in `.github/workflows/ci-cd.yml`.
 
-> Cloud deployment targets such as Amazon ECR and ECS/Fargate should
-> only be considered part of the implemented deployment path when the
-> corresponding workflow and infrastructure are configured and enabled.
+The pipeline currently provides **Continuous Delivery to GHCR**; production deployment is not automated.
 
 ------------------------------------------------------------------------
 
